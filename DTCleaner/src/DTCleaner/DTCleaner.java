@@ -1,3 +1,4 @@
+package DTCleaner;
 import weka.filters.Filter;
 
 public class DTCleaner {

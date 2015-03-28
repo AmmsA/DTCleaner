@@ -1,3 +1,4 @@
+package DTCleaner;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
@@ -8,6 +9,8 @@ import weka.filters.unsupervised.attribute.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
+
+
 
 public class CSVtoArff {
 
@@ -50,6 +53,8 @@ public class CSVtoArff {
 		saver.setInstances(instances);
 		saver.setFile(new File(args[1]));
 		saver.writeBatch();
+		
+		
 		
 		sc.close();
 		
