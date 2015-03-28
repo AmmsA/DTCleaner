@@ -13,9 +13,8 @@ public class CSVtoArff {
 
 	/**
 		Convert a CSV file to an Arff file.
-		input: CSV file (comma seperated)
+		input: CSV file (comma separated)
 		output: Arff file
-	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws Exception {
 		if(args.length != 2){
@@ -29,17 +28,9 @@ public class CSVtoArff {
 		// load CSV file.
 		CSVLoader loader = new CSVLoader();
 		loader.setSource(new File("data/hospital.csv"));
-		Instances data = loader.getDataSet();
-		
-		// Save Arff file.
-		ArffSaver saver = new ArffSaver();
-		saver.setInstances(data);
-		saver.setFile(new File(args[1]));
-		saver.writeBatch();
+		Instances instances = loader.getDataSet();
 
 		//Print Summary
-		DataSource source = new DataSource(args[1]);
-		Instances instances = source.getDataSet();
 		System.out.println("\nDataset summary:\n");
 		System.out.println(instances.toSummaryString());
 		
@@ -53,41 +44,76 @@ public class CSVtoArff {
 		String answer = sc.next();
 		if(answer.toLowerCase().contentEquals("y")) System.out.println(instances);
 		
+		// Save Arff file.
+		System.out.println("\nSaving Arff file...\n");
+		ArffSaver saver = new ArffSaver();
+		saver.setInstances(instances);
+		saver.setFile(new File(args[1]));
+		saver.writeBatch();
 		
+		sc.close();
 		
 	}
 	
-	public static Instances changeType(Instances i) throws Exception{
+	
+	/**
+	 * Changes type of attributes.
+	 */
+	private static Instances changeType(Instances i) throws Exception{
 		Scanner sc = new Scanner(System.in);
 		String answer = "";
 		while(!answer.toLowerCase().contentEquals("n")){
 			System.out.println("\nDo you want to change the type of some attributes? (Y/N)?");
 			answer = sc.next();
 			if(answer.toLowerCase().contentEquals("y")){
-				System.out.println("\nFrom numeric to nomianl? (Y/N)?");
-				answer = sc.next();
-				if(answer.toLowerCase().contentEquals("y")){
-					System.out.println("Type range of variables to make nominal, e.g. \"1,3-4,7\"");
-					String range = sc.next();
-					
-					NumericToNominal convert = new NumericToNominal();
-					String[] options = {"-R",range};
-					
-					convert.setOptions(options);
-					convert.setInputFormat(i);
-					
-					System.out.println("\nConverting...");
-					
-					Instances newI = Filter.useFilter(i, convert);
-					i = newI;
-					System.out.println(i.toSummaryString());
-
+				System.out.println("Choose from list:\n" +
+									"1- From numeric to nominal\n" +
+								   	"2- From nominal to numeric");
+				int choice = sc.nextInt();
+				
+				if(choice == 1){
+					i = NumToNom(i);
+				}else if(choice == 2){
+					i = NomToNum(i);
+				}else{
+					System.out.println("Not a valid choice");
 				}
 			}
 			
 		}
-		
 		return i;
+	}
+	
+	/**
+	 * Converting attributes from Nominal to Numeric.
+	 */
+	private static Instances NomToNum(Instances i) throws Exception{
+		// TODO 
+		System.out.println("\n Conversion function isn't implented yet");
+		System.out.println(i.toSummaryString());
+		return i;
+	}
+
+	/**
+	 * Converting attributes from Numeric to Nominal.
+	 */
+	private static Instances NumToNom(Instances i) throws Exception{
+		System.out.println("Type range of variables to make nominal, e.g. \"1,3-4,7\"");
+		Scanner sc = new Scanner(System.in);
+		String range = sc.next();
+		
+		NumericToNominal convert = new NumericToNominal();
+		String[] options = {"-R",range};
+		
+		convert.setOptions(options);
+		convert.setInputFormat(i);
+		
+		System.out.println("\nConverting...\n");
+		
+		Instances newI = Filter.useFilter(i, convert);
+		System.out.println(newI.toSummaryString());
+		
+		return newI;
 	}
 
 }
