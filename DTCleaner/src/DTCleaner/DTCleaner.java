@@ -22,21 +22,28 @@ public class DTCleaner {
 	public DTCleaner(String dataInput, String FDInput) throws Exception{
 		
 		// Initialize variables
-		// Reading FDs
-		FDs = FDUtility.readFDs(FDInput);
 		// Reading dataset
 		DataSource scource = new DataSource(dataInput);
 		System.out.println("\nReading dataset: "+dataInput+"...");
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
+		// Reading FDs
+		FDs = FDUtility.readFDs(FDInput);
+		System.out.println("\nFDs summary:");
+		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
 		violated = new Instances(i,0);
 		
 	}
 	
+	public boolean isFDSatisfied(){
+		
+		return FDUtility.checkFDSatisfiaction(i, FDs);
+	}
+	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		if(args.length != 2){
 			System.out.println("\nUsage: DTCleaner <input.arff> <FDinput.txt>");
 			System.out.println("Eample: DTCleaner <data/hospital.arff> <FDlist.txt>");
