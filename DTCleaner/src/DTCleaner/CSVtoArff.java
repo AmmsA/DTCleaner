@@ -2,12 +2,10 @@ package DTCleaner;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 import weka.core.converters.CSVLoader;
-import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Scanner;
 
 
@@ -30,7 +28,7 @@ public class CSVtoArff {
 		
 		// load CSV file.
 		CSVLoader loader = new CSVLoader();
-		loader.setSource(new File("data/hospital.csv"));
+		loader.setSource(new File(args[0]));
 		Instances instances = loader.getDataSet();
 
 		//Print Summary
@@ -54,7 +52,7 @@ public class CSVtoArff {
 		saver.setFile(new File(args[1]));
 		saver.writeBatch();
 		
-		
+		FDUtility.addFD(instances);
 		
 		sc.close();
 		
