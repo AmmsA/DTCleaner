@@ -100,9 +100,6 @@ public class FDUtility {
 		return summary.toString();
 	}
 	
-	public static void main(String[] args) {
-
-	}
 
 	/**
 	 * Check whether the dataset satisfies all FDs
