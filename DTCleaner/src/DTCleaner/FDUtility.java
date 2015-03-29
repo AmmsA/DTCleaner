@@ -3,9 +3,13 @@ import weka.core.Utils;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 import weka.core.Instances;
@@ -48,7 +52,6 @@ public class FDUtility {
 			if(line.contains(",")){
 				String [] fd = line.split("->");
 				String key = fd[0];
-				System.out.println(key);
 				String [] rhs = fd[1].split(",");
 				FDs.put(key, rhs);
 			}else if(!line.substring(line.indexOf('>')+1, line.length()).contains(",")){
@@ -108,17 +111,27 @@ public class FDUtility {
 	 * @return true if dataset satisfies all FDs, otherwise false.
 	 */
 	
-	public static <T> boolean checkFDSatisfiaction(Instances i,	HashMap<String, String[]> FDs) {
-		Enumeration enumInstances = i.enumerateInstances();
-		while(enumInstances.hasMoreElements()){
-			System.out.println(enumInstances.toString());
-		}
-		
-		HashMap<T[],T> map = new HashMap<T[],T>();
+	public static boolean checkFDSatisfiaction(Instances i,	HashMap<String, String[]> FDs) {		
+		HashMap<List<Object>,Object> map = new HashMap<List<Object>,Object>();
+		System.out.println("\nChecking FD sataisfactian...\n");
 		for(String premiseID : FDs.keySet()){
-			
+			String [] rhsIDs = FDs.get(premiseID);
+			for(int j = 0; j < i.numInstances(); j++){
+				List<Object> rhsValues = new LinkedList<Object>();
+				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
+				String premise = i.instance(j).toString(Integer.parseInt(premiseID));
+				if(map.containsKey(rhsValues) && !map.get(rhsValues).equals(premise)){
+					System.out.println("The following pair violate an FD:");
+					System.out.println(rhsValues.toString() + " " + premise);
+					System.out.println(rhsValues.toString() + " " + map.get(rhsValues) + "\n");
+					return false;
+				}
+				else{
+					map.put(Collections.unmodifiableList(rhsValues), premise);
+				}
+			}
 		}
-		return false;
+		return true;
 	}
 
 }

@@ -35,6 +35,7 @@ public class DTCleaner {
 		// initialize violated instances, same header as original instance.
 		violated = new Instances(i,0);
 		
+		System.out.println(isFDSatisfied());
 	}
 	
 	public boolean isFDSatisfied(){
