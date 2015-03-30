@@ -35,12 +35,21 @@ public class DTCleaner {
 		// initialize violated instances, same header as original instance.
 		violated = new Instances(i,0);
 		
-		System.out.println(isFDSatisfied());
+		System.out.println(violatedTuples().numInstances());
+		//printInstances();
 	}
 	
 	public boolean isFDSatisfied(){
 		
 		return FDUtility.checkFDSatisfiaction(i, FDs);
+	}
+	
+	public Instances violatedTuples(){
+		return FDUtility.returnViolatedTuples(i, FDs);
+	}
+	
+	public void printInstances(){
+		System.out.println(i);
 	}
 	
 

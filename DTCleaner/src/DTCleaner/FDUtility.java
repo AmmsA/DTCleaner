@@ -3,11 +3,13 @@ import weka.core.Utils;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -110,7 +112,6 @@ public class FDUtility {
 	 * @param FDs: list of FDs
 	 * @return true if dataset satisfies all FDs, otherwise false.
 	 */
-	
 	public static boolean checkFDSatisfiaction(Instances i,	HashMap<String, String[]> FDs) {		
 		HashMap<List<Object>,Object> map = new HashMap<List<Object>,Object>();
 		System.out.println("\nChecking FD sataisfactian...\n");
@@ -121,9 +122,11 @@ public class FDUtility {
 				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
 				String premise = i.instance(j).toString(Integer.parseInt(premiseID));
 				if(map.containsKey(rhsValues) && !map.get(rhsValues).equals(premise)){
+					
 					System.out.println("The following pair violate an FD:");
 					System.out.println(rhsValues.toString() + " " + premise);
 					System.out.println(rhsValues.toString() + " " + map.get(rhsValues) + "\n");
+					
 					return false;
 				}
 				else{
@@ -132,6 +135,53 @@ public class FDUtility {
 			}
 		}
 		return true;
+	}
+	
+	/**
+	 * Finds and returns a list of tuples that violates the FDs
+	 * @param i
+	 * @param FDs
+	 * @return v: Violated instances
+	 */
+	public static Instances returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
+		Instances v = new Instances(i,0);
+		
+		//Holds RHS values in List<Object> and the premise and the tuple index in SImpleImmutableEntry<String,Integer>
+		HashMap<List<Object>,SimpleImmutableEntry<String,Integer>> map = new HashMap<List<Object>,SimpleImmutableEntry<String,Integer>>();
+		//Holds tuple index of violated tuples
+		HashSet<Integer> tupleID = new HashSet<Integer>();
+		
+		System.out.println("\nFinding violated tuples...\n");
+		
+		for(String premiseID : FDs.keySet()){
+			String [] rhsIDs = FDs.get(premiseID);
+			for(int j = 0; j < i.numInstances(); j++){
+				List<Object> rhsValues = new LinkedList<Object>();
+				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
+				String premise = i.instance(j).toString(Integer.parseInt(premiseID));
+				if(map.containsKey(rhsValues) && !map.get(rhsValues).getKey().contentEquals(premise)){
+					int tupleIndex = map.get(rhsValues).getValue();
+
+					// Add index to list of violated tuples
+					// Add the tuple to the list of violated tuples
+
+					if(!tupleID.contains(tupleIndex)){
+						tupleID.add(tupleIndex);
+						v.add(i.instance(tupleIndex));
+					}
+					if(!tupleID.contains(j)){
+						tupleID.add(j);
+						v.add(i.instance(j));
+					}					
+				}
+				else{
+					map.put(Collections.unmodifiableList(rhsValues), new SimpleImmutableEntry<String,Integer>(premise,j));
+				}
+			}
+		}
+		
+		return v;
+		
 	}
 
 }
