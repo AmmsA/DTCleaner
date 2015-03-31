@@ -1,4 +1,6 @@
 package DTCleaner;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,6 +18,7 @@ public class DTCleaner {
 	Instances violated;
 	// holds index of violated tuples and the list of FDs that it violates.
 	HashMap<Integer, List<String>> violatedTuplesMap;
+	
 	/**
 	 * 
 	 * @param dataInput: The input data set location, e.g. data/hospital.arff 
@@ -37,9 +40,38 @@ public class DTCleaner {
 		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
 		updateViolated();
-		printViolatingTuplesMap();
+		SeperateViolatedInstances();
 	}
 	
+	/**
+	 * Removes the violated instances from our training set.
+	 * This should be performed after updateViolated() method
+	 */
+	public void SeperateViolatedInstances(){
+		System.out.println("\nSeperating violating tuples from dataset...");
+		Object[] keys = violatedTuplesMap.keySet().toArray();
+		Arrays.sort(keys, Collections.reverseOrder());
+		int count = 0;
+		// it's important to iterate in descending order (from last to first), because when we remove
+		// an instance, the rest shifts by 1 position.
+		for(Object k : keys){
+			int index = (Integer) k;
+			i.delete(index);
+			count++;
+		}
+		if(violatedTuplesMap.keySet().size() >= 1) {
+			System.out.println("Removed: "+ count);
+			System.out.println("Num Instances left: "+ i.numInstances());
+		}
+		else System.out.println("Did not preform any removal. Violating tuples set is empty.");
+	}
+	
+	/**
+	 * Finds the violating tuples and returns
+	 * 1- Instances violated: contains the list of violating instances
+	 * 2- HashMap that maps the tuple index in the dataset and a list of FDs
+	 * 		that it violates.
+	 */
 	private void updateViolated() {
 		violatedTuples v = FDUtility.returnViolatedTuples(i, FDs);
 		violated = v.instances;
@@ -64,7 +96,6 @@ public class DTCleaner {
 				"   " + " FD");
 		
 		for(int index : violatedTuplesMap.keySet()){
-			if(count == 10) break;
 			StringBuilder row = new StringBuilder();
 			row.append(Utils.padLeft("" + (count++), 5)+"   ");
 			row.append(Utils.padLeft("" + (index), 5)+" : ");
