@@ -40,14 +40,14 @@ public class DTCleaner {
 		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
 		updateViolated();
-		SeperateViolatedInstances();
 	}
 	
 	/**
 	 * Removes the violated instances from our training set.
-	 * This should be performed after updateViolated() method
+	 * This should be performed after updateViolated() method.
+	 * @return the new instances after removal
 	 */
-	public void SeperateViolatedInstances(){
+	public Instances SeperateViolatedInstances(){
 		System.out.println("\nSeperating violating tuples from dataset...");
 		Object[] keys = violatedTuplesMap.keySet().toArray();
 		Arrays.sort(keys, Collections.reverseOrder());
@@ -64,11 +64,12 @@ public class DTCleaner {
 			System.out.println("Num Instances left: "+ i.numInstances());
 		}
 		else System.out.println("Did not preform any removal. Violating tuples set is empty.");
+		return i;
 	}
 	
 	/**
 	 * Finds the violating tuples and returns
-	 * 1- Instances violated: contains the list of violating instances
+	 * 1- Instances violated: contains the list of violating instances.
 	 * 2- HashMap that maps the tuple index in the dataset and a list of FDs
 	 * 		that it violates.
 	 */
@@ -78,15 +79,29 @@ public class DTCleaner {
 		violatedTuplesMap = v.tupleID;
 	}
 
+	public Instances returnViolatedInstancs(){
+		return violated;
+	}
+	
+	/**
+	 * Checks wheather the data instance satisfies our FDs
+	 * @return boolean
+	 */
 	public boolean isFDSatisfied(){
 		
 		return FDUtility.checkFDSatisfiaction(i, FDs);
 	}
 	
+	/**
+	 * Prints the instances to console.
+	 */
 	public void printInstances(){
 		System.out.println(i);
 	}
 	
+	/**
+	 * Prints the violating tuple index and the FDs that it violates.
+	 */
 	public void printViolatingTuplesMap(){
 		int count = 0;
 		
