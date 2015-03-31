@@ -16,6 +16,20 @@ import java.util.Scanner;
 
 import weka.core.Instances;
 
+
+/**
+ * Used to return two objects in returnViolatedTuples
+ */
+class violatedTuples {
+	public final Instances instances;
+	public final HashMap<Integer, List<String>> tupleID;
+	
+	public violatedTuples(Instances instances, HashMap<Integer, List<String>> tupleID) {
+		this.instances = instances;
+		this.tupleID = tupleID;
+	}
+}
+
 /**
  * Functional Dependency Utilities
  * 
@@ -141,20 +155,28 @@ public class FDUtility {
 	 * Finds and returns a list of tuples that violates the FDs
 	 * @param i
 	 * @param FDs
-	 * @return v: Violated instances
+	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
 	 */
-	public static Instances returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
+	public static violatedTuples returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
 		Instances v = new Instances(i,0);
 		
 		//Holds RHS values in List<Object> and the premise and the tuple index in SImpleImmutableEntry<String,Integer>
 		HashMap<List<Object>,SimpleImmutableEntry<String,Integer>> map = new HashMap<List<Object>,SimpleImmutableEntry<String,Integer>>();
-		//Holds tuple index of violated tuples
-		HashSet<Integer> tupleID = new HashSet<Integer>();
+		//Holds tuple index of violated tuples, and the FD it violates
+		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
 		
 		System.out.println("\nFinding violated tuples...\n");
 		
 		for(String premiseID : FDs.keySet()){
 			String [] rhsIDs = FDs.get(premiseID);
+			
+			String fd = premiseID+"->";
+			String rhs = "";
+			for(String r : rhsIDs) rhs = r + ",";
+			rhs = rhs.substring(0, rhs.length()-1); // delete last ','
+			fd = fd+rhs; // merge
+			fd = FDtoString(i, fd);
+			
 			for(int j = 0; j < i.numInstances(); j++){
 				List<Object> rhsValues = new LinkedList<Object>();
 				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
@@ -165,22 +187,58 @@ public class FDUtility {
 					// Add index to list of violated tuples
 					// Add the tuple to the list of violated tuples
 
-					if(!tupleID.contains(tupleIndex)){
-						tupleID.add(tupleIndex);
+					if(!tupleID.containsKey(tupleIndex)){
+						List<String> vFDs = new LinkedList<String>();
+						vFDs.add(fd);
+						tupleID.put(tupleIndex, vFDs);
 						v.add(i.instance(tupleIndex));
 					}
-					if(!tupleID.contains(j)){
-						tupleID.add(j);
+					if(!tupleID.containsKey(j)){
+						List<String> vFDs = new LinkedList<String>();
+						vFDs.add(fd);
+						tupleID.put(j,vFDs);
 						v.add(i.instance(j));
-					}					
+					}
+
 				}
 				else{
 					map.put(Collections.unmodifiableList(rhsValues), new SimpleImmutableEntry<String,Integer>(premise,j));
 				}
 			}
 		}
+	
+		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
 		
-		return v;
+		violatedTuples pair = new violatedTuples(v, tupleID);
+		return pair;
+		
+	}
+	
+	/**
+	 * Returns the FD by it's name, e.g. given  1->2, return "HospitalName->Address1"
+	 * @param i, premiseToRHS
+	 * @return
+	 */
+	public static String FDtoString(Instances i, String FDIDs){
+		String [] fd = FDIDs.split("->");
+		String premise = fd[0];
+		String rhs = fd[1];
+		
+		StringBuilder result = new StringBuilder();
+		result.append(i.attribute(Integer.parseInt(premise)).name());
+		result.append("->");
+		if(rhs.contains(",")){
+			String[] rhsList = rhs.split(",");
+			for(String r : rhsList) result.append(i.attribute(Integer.parseInt(r)).name()+", ");
+			//remove the last ", "
+			result.deleteCharAt(result.length()-1);
+			result.deleteCharAt(result.length()-1);
+			
+		}else{
+			 result.append(i.attribute(Integer.parseInt(rhs)).name());
+		}
+		
+		return result.toString();
 		
 	}
 

@@ -1,7 +1,9 @@
 package DTCleaner;
 import java.util.HashMap;
+import java.util.List;
 
 import weka.core.Instances;
+import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
 
 public class DTCleaner {
@@ -12,7 +14,8 @@ public class DTCleaner {
 	Instances i;
 	// Violated instances
 	Instances violated;
-	
+	// holds index of violated tuples and the list of FDs that it violates.
+	HashMap<Integer, List<String>> violatedTuplesMap;
 	/**
 	 * 
 	 * @param dataInput: The input data set location, e.g. data/hospital.arff 
@@ -33,25 +36,48 @@ public class DTCleaner {
 		System.out.println("\nFDs summary:");
 		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
-		violated = new Instances(i,0);
-		
-		System.out.println(violatedTuples().numInstances());
-		//printInstances();
+		updateViolated();
+		printViolatingTuplesMap();
 	}
 	
+	private void updateViolated() {
+		violatedTuples v = FDUtility.returnViolatedTuples(i, FDs);
+		violated = v.instances;
+		violatedTuplesMap = v.tupleID;
+	}
+
 	public boolean isFDSatisfied(){
 		
 		return FDUtility.checkFDSatisfiaction(i, FDs);
-	}
-	
-	public Instances violatedTuples(){
-		return FDUtility.returnViolatedTuples(i, FDs);
 	}
 	
 	public void printInstances(){
 		System.out.println(i);
 	}
 	
+	public void printViolatingTuplesMap(){
+		int count = 0;
+		
+		//Print header
+		System.out.println("\n"+ Utils.padLeft("Num" , 5)+
+				"   " + Utils.padLeft("Index" , 5)+
+				"   " + " FD");
+		
+		for(int index : violatedTuplesMap.keySet()){
+			if(count == 10) break;
+			StringBuilder row = new StringBuilder();
+			row.append(Utils.padLeft("" + (count++), 5)+"   ");
+			row.append(Utils.padLeft("" + (index), 5)+" : ");
+			for(String FD : violatedTuplesMap.get(index)){
+				row.append(FD+ " | ");
+			}
+			
+			//remove the last " | " chars
+			row.delete(row.length()-3, row.length());
+			
+			System.out.println(row);
+		}
+	}
 
 	public static void main(String[] args) throws Exception {
 		if(args.length != 2){
