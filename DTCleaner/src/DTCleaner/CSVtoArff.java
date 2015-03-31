@@ -51,9 +51,7 @@ public class CSVtoArff {
 		saver.setInstances(instances);
 		saver.setFile(new File(args[1]));
 		saver.writeBatch();
-		
-		FDUtility.addFD(instances);
-		
+				
 		sc.close();
 		
 	}
