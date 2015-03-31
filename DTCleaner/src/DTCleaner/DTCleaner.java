@@ -47,7 +47,7 @@ public class DTCleaner {
 	 * This should be performed after updateViolated() method.
 	 * @return the new instances after removal
 	 */
-	public Instances SeperateViolatedInstances(){
+	public Instances seperateViolatedInstances(){
 		System.out.println("\nSeperating violating tuples from dataset...");
 		Object[] keys = violatedTuplesMap.keySet().toArray();
 		Arrays.sort(keys, Collections.reverseOrder());
@@ -133,6 +133,7 @@ public class DTCleaner {
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
+		cleaner.seperateViolatedInstances();
 	}
 
 }
