@@ -1,14 +1,18 @@
 package DTCleaner;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
-import weka.core.Instance;
+import weka.core.Attribute;
+import weka.core.FastVector;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
+import weka.filters.Filter;
 
 public class DTCleaner {
 	
@@ -127,7 +131,9 @@ public class DTCleaner {
 		}
 	}
 	
-	
+	/**
+	 * Replaces violating entries (w.r.t FDs) in the list of violating tuples with missing values
+	 */
 	public void replaceViolatingTuplesWithMissing(){
 		for(String premise : FDs.keySet()){
 			ArrayList<Integer> attrIndexes = new ArrayList<Integer>();
@@ -151,6 +157,7 @@ public class DTCleaner {
 			for(int attIndex : attIndexes)	i.instance(j).setMissing(attIndex);
 		}
 	}
+
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -162,8 +169,8 @@ public class DTCleaner {
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
 		cleaner.seperateViolatedInstances();
-		cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{1,8});
-		System.out.println(cleaner.getViolatedInstancs());
+		cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{1,2});
+		System.out.println(Util.mergeAttributes(cleaner.i, new int[]{1,2}));
 	}
 
 }
