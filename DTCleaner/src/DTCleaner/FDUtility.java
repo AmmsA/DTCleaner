@@ -157,6 +157,8 @@ public class FDUtility {
 	 * @param FDs
 	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
 	 */
+	
+	//needs to be fixed
 	public static violatedTuples returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
 		Instances v = new Instances(i,0);
 		
@@ -164,6 +166,8 @@ public class FDUtility {
 		HashMap<List<Object>,SimpleImmutableEntry<String,Integer>> map = new HashMap<List<Object>,SimpleImmutableEntry<String,Integer>>();
 		//Holds tuple index of violated tuples, and the FD it violates
 		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
+		
+		HashMap<String, SimpleImmutableEntry<String,Integer>> premises = new HashMap<String, SimpleImmutableEntry<String,Integer>>();
 		
 		System.out.println("\nFinding violated tuples...\n");
 		
@@ -200,15 +204,25 @@ public class FDUtility {
 						v.add(i.instance(j));
 					}
 
-				}
-				else{
+				}else if(!map.containsKey(rhsValues) && premises.keySet().contains(premise)){
+					if(!tupleID.containsKey(premises.get(premise).getValue())){
+						List<String> vFDs = new LinkedList<String>();
+						vFDs.add(fd);
+						tupleID.put(j,vFDs);
+						v.add(i.instance(j));
+						v.add(i.instance(premises.get(premise).getValue()));
+					}
+					
+				}else{
 					map.put(Collections.unmodifiableList(rhsValues), new SimpleImmutableEntry<String,Integer>(premise,j));
+					premises.put(premise, new SimpleImmutableEntry<String,Integer>(premise,j));
 				}
 			}
 		}
 	
 		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
 		
+		System.out.println(v);
 		violatedTuples pair = new violatedTuples(v, tupleID);
 		return pair;
 		

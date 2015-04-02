@@ -64,6 +64,8 @@ public class Util {
 		// remove first "_"
 		name.deleteCharAt(0);
 		
+		System.out.println("\nMergeing the attributes into new attribue: " + name.toString()+" ...");
+		
 		FastVector attValues = new FastVector();
 		// holder is used to make sure we only add distinct values in our FastVector
 		HashSet<String> holder = new HashSet<String>();
