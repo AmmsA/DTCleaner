@@ -1,9 +1,11 @@
 package DTCleaner;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -79,7 +81,7 @@ public class DTCleaner {
 		violatedTuplesMap = v.tupleID;
 	}
 
-	public Instances returnViolatedInstancs(){
+	public Instances getViolatedInstancs(){
 		return violated;
 	}
 	
@@ -124,7 +126,33 @@ public class DTCleaner {
 			System.out.println(row);
 		}
 	}
-
+	
+	
+	public void replaceViolatingTuplesWithMissing(){
+		for(String premise : FDs.keySet()){
+			ArrayList<Integer> attrIndexes = new ArrayList<Integer>();
+			attrIndexes.add(Integer.parseInt(premise));
+			for(String rhs : FDs.get(premise)){
+				attrIndexes.add(Integer.parseInt(rhs));
+			}
+			
+			setMissingAtIndex(violated, Util.convertIntegers(attrIndexes));
+		}
+	}
+	
+	/**
+	 * Sets attribute values to be "missing" in the input instances i.
+	 *   
+	 * @param i: instances to work with
+	 * @param attIndex: array of indexes of the attribute which we would remove the values in
+	 */
+	public void setMissingAtIndex(Instances i, int[] attIndexes){
+		for(int j = 0; j < i.numInstances(); j++)	{
+			for(int attIndex : attIndexes)	i.instance(j).setMissing(attIndex);
+		}
+	}
+	
+	
 	public static void main(String[] args) throws Exception {
 		if(args.length != 2){
 			System.out.println("\nUsage: DTCleaner <input.arff> <FDinput.txt>");
@@ -134,6 +162,8 @@ public class DTCleaner {
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
 		cleaner.seperateViolatedInstances();
+		cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{1,8});
+		System.out.println(cleaner.getViolatedInstancs());
 	}
 
 }
