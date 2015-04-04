@@ -45,16 +45,17 @@ public class DTCleaner{
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
+		// Reading CFDs
+		CFDs = CFDUtility.readCFDs("data/CFDs");
+		System.out.println("\nCFDs summary:");
+		System.out.println(CFDUtility.toSummaryString(i, CFDs));
 		// Reading FDs
 		FDs = FDUtility.readFDs(FDInput);
 		System.out.println("\nFDs summary:");
 		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
-		updateViolated();
-		// Reading CFDs
-		CFDs = CFDUtility.readCFDs("data/CFDs");
-		System.out.println("\nCFDs summary:");
-		System.out.println(CFDUtility.toSummaryString(i, CFDs));
+		//updateViolated();
+		
 	}
 	
 	/**

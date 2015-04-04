@@ -116,4 +116,25 @@ public class CFDUtility {
 		return summary.toString();
 	}
 	
+	/**
+	 * Finds and returns a list of tuples that violates the CFDs
+	 * @param i
+	 * @param CFDs
+	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
+	 */
+	public static violatedTuples returnViolatedTuples(Instances i, HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs){
+		// TO BE WRITTEN
+		return null;
+	}
+	
+	/**
+	 * Returns the CFD by it's name, e.g. given  5="16801"->2="240 Billiard St.", return ZIPCode=16801 -> Address1=240 Billiard St.
+	 * @param i, CFD
+	 * @return String representation of the CFDs with the attribute names included
+	 */
+	public static String FDtoString(Instances i, String CFD){
+		// TBW
+		return null;
+	}
+	
 }
