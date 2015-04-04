@@ -11,6 +11,8 @@ import java.util.Scanner;
 import weka.core.Instances;
 import weka.core.Utils;
 
+import com.google.common.collect.*;
+
 public class CFDUtility {
 
 	/**
@@ -24,12 +26,11 @@ public class CFDUtility {
 	 * @return HashMap of CFDs
 	 * @throws FileNotFoundException 
 	 */
-	public static HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> readCFDs(String filename) throws FileNotFoundException{
+	public static Multiset<CFD> readCFDs(String filename) throws FileNotFoundException{
 		
-		// Holds List<attribute#, value> of the CFD premise side as key, and entry attribute#, value as the value in hashmap
-		HashMap<LinkedList<SimpleImmutableEntry<Integer,String>>, SimpleImmutableEntry<Integer,String>> CFDs = 
-				new HashMap<LinkedList<SimpleImmutableEntry<Integer,String>>, SimpleImmutableEntry<Integer,String>>();
-		
+		// Holds CFDs
+		Multiset<CFD> CFDs = HashMultiset.create();
+	
 		System.out.println("\nReading CFDs: " + filename + "...\n");
 		Scanner in = new Scanner(new FileReader(filename));
 		
@@ -68,8 +69,8 @@ public class CFDUtility {
 				SimpleImmutableEntry<Integer, String> rhsValue = 
 						new SimpleImmutableEntry<Integer,String>(Integer.parseInt(rhs[0]),Util.removeFirstAndLastChars(rhs[1]));
 				
-				
-				CFDs.put(premises, rhsValue);
+				CFD newCFD = new CFD(premises, rhsValue);
+				CFDs.add(newCFD);
 				
 			}else{
 				// invalid CFD syntax
@@ -87,17 +88,17 @@ public class CFDUtility {
 	 * @param i
 	 * @return String summary: summary of CFDs
 	 */
-	public static String toSummaryString(Instances i, HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs){
+	public static String toSummaryString(Instances i, Multiset<CFD> CFDs){
 		StringBuilder summary = new StringBuilder();
-		summary.append("Num CFDs: "+CFDs.keySet().size()+"\n\n");
+		summary.append("Num CFDs: "+CFDs.size()+"\n\n");
 		
 		int counter = 1;
 		
-		for(LinkedList<SimpleImmutableEntry<Integer, String>> premise : CFDs.keySet()){
+		for(CFD currentCFD : CFDs){
 			StringBuilder cfd = new StringBuilder();
 			cfd.append(Utils.padLeft("" + (counter++), 4)+"   ");
 			
-			for(SimpleImmutableEntry<Integer, String> singleLHS : premise){
+			for(SimpleImmutableEntry<Integer, String> singleLHS : currentCFD.getPremise()){
 				cfd.append(i.attribute(singleLHS.getKey()).name());
 				cfd.append("=");
 				cfd.append(singleLHS.getValue());
@@ -107,7 +108,7 @@ public class CFDUtility {
 			cfd.deleteCharAt(cfd.length() - 1);
 			
 			cfd.append(" -> ");
-			SimpleImmutableEntry<Integer, String> rhsValue = CFDs.get(premise);
+			SimpleImmutableEntry<Integer, String> rhsValue = currentCFD.getRHS();
 			cfd.append(i.attribute(rhsValue.getKey()).name() + "="+rhsValue.getValue());			
 			
 			//add to summary
@@ -123,19 +124,19 @@ public class CFDUtility {
 	 * @param CFDs
 	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
 	 */
-	public static violatedTuples returnViolatedTuples(Instances i, HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs){
+	public static violatedTuples returnViolatedTuples(Instances i, Multiset<CFD> CFDs){
 		Instances v = new Instances(i,0);
 		
 		//Holds tuple index of violated tuples, and the CFD it violates
 		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
 
 		
-		for(LinkedList<SimpleImmutableEntry<Integer, String>> premise : CFDs.keySet()){
-			SimpleImmutableEntry<Integer, String> CFDRHSValue = CFDs.get(premise);
+		for(CFD currentCFD : CFDs){
+			SimpleImmutableEntry<Integer, String> CFDRHSValue = currentCFD.getRHS();
 			
 			//parsing CFD to String
 			String cfd = "";
-			for(SimpleImmutableEntry<Integer, String> entry : premise){
+			for(SimpleImmutableEntry<Integer, String> entry : currentCFD.getPremise()){
 				cfd += entry.getKey() + "=" + entry.getValue() + ",";
 			}
 			//delete last ","
@@ -146,14 +147,14 @@ public class CFDUtility {
 			for(int j = 0; j < i.numInstances(); j++){
 				// holds the lhs values from the dataset that match the CFDs premise (lhs)
 				LinkedList<SimpleImmutableEntry<Integer, String>> row = new LinkedList<SimpleImmutableEntry<Integer, String>>();
-				for(SimpleImmutableEntry<Integer, String> entry : premise){
+				for(SimpleImmutableEntry<Integer, String> entry : currentCFD.getPremise()){
 					row.add(new SimpleImmutableEntry<Integer, String>(entry.getKey(), i.instance(j).stringValue((entry.getKey()))));
 				}
 				
 				SimpleImmutableEntry<Integer, String> rowRHSValue = new SimpleImmutableEntry<Integer, String>(CFDRHSValue.getKey(), i.instance(j).stringValue(CFDRHSValue.getKey()));
 				
 				// found violating tuple
-				if(row.equals(premise) && !rowRHSValue.equals(CFDRHSValue)){
+				if(row.equals(currentCFD.getPremise()) && !rowRHSValue.equals(CFDRHSValue)){
 					
 					if(!tupleID.containsKey(j)){
 						List<String> vCFDs = new LinkedList<String>();
@@ -161,15 +162,15 @@ public class CFDUtility {
 						tupleID.put(j, vCFDs);
 					}else{
 						tupleID.get(j).add(cfd);
+						v.add(i.instance(j));
 					} 
 					
-					v.add(i.instance(j));
 				}
 			}		
 		}
 
 		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
-		
+
 		violatedTuples pair = new violatedTuples(v, tupleID);
 		return pair;
 

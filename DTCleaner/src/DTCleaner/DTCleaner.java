@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.AbstractMap.SimpleImmutableEntry;
 
+import com.google.common.collect.Multiset;
+
 import weka.core.Attribute;
 import weka.core.FastVector;
 import weka.core.Instances;
@@ -22,7 +24,7 @@ public class DTCleaner{
 	// Set of FDs
 	HashMap<String, String[]> FDs;
 	// Set of CFDs
-	HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs;
+	Multiset<CFD> CFDs;
 	// Dataset instance
 	Instances i;
 	// Violated instances
@@ -194,7 +196,7 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-
+		System.out.println(cleaner.getViolatedInstancs());
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
 		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});
