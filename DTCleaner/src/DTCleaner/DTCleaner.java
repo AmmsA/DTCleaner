@@ -39,23 +39,27 @@ public class DTCleaner{
 	public DTCleaner(String dataInput, String FDInput) throws Exception{
 		
 		// Initialize variables
+		
 		// Reading dataset
 		DataSource scource = new DataSource(dataInput);
 		System.out.println("\nReading dataset: "+dataInput+"...");
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
+		
 		// Reading CFDs
 		CFDs = CFDUtility.readCFDs("data/CFDs");
 		System.out.println("\nCFDs summary:");
 		System.out.println(CFDUtility.toSummaryString(i, CFDs));
-		// Reading FDs
+
+		/*// Reading FDs
 		FDs = FDUtility.readFDs(FDInput);
 		System.out.println("\nFDs summary:");
 		System.out.println(FDUtility.toSummaryString(i, FDs));
+		*/
+	
 		// initialize violated instances, same header as original instance.
-		//updateViolated();
-		
+		CFDupdateViolated();
 	}
 	
 	/**
@@ -86,15 +90,27 @@ public class DTCleaner{
 	/**
 	 * Finds the violating tuples and returns
 	 * 1- Instances violated: contains the list of violating instances.
-	 * 2- HashMap that maps the tuple index in the dataset and a list of FDs
+	 * 2- HashMap that maps the tuple index in the dataset and a list of CFDs
 	 * 		that it violates.
 	 */
-	private void updateViolated() {
-		violatedTuples v = FDUtility.returnViolatedTuples(i, FDs);
+	private void CFDupdateViolated() {
+		violatedTuples v = CFDUtility.returnViolatedTuples(i, CFDs);
 		violated = v.instances;
 		violatedTuplesMap = v.tupleID;
 	}
 
+	/**
+	 * Finds the violating tuples and returns
+	 * 1- Instances violated: contains the list of violating instances.
+	 * 2- HashMap that maps the tuple index in the dataset and a list of FDs
+	 * 		that it violates.
+	 */
+	private void FDupdateViolated() {
+		violatedTuples v = FDUtility.returnViolatedTuples(i, FDs);
+		violated = v.instances;
+		violatedTuplesMap = v.tupleID;
+	}
+	
 	public Instances getViolatedInstancs(){
 		return violated;
 	}
@@ -178,6 +194,8 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
+		
+
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
 		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});

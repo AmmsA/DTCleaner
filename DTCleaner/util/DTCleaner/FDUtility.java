@@ -189,9 +189,11 @@ public class FDUtility {
 							List<String> vFDs = new LinkedList<String>();
 							vFDs.add(fd);
 							tupleID.put(index, vFDs);
-							
-							v.add(i.instance(index));
+						}else{
+							tupleID.get(index).add(fd);
 						}
+						
+						v.add(i.instance(index));
 					}
 					
 					// Here we take care of the tuple we are currently processing
@@ -199,9 +201,11 @@ public class FDUtility {
 						List<String> vFDs = new LinkedList<String>();
 						vFDs.add(fd);
 						tupleID.put(j,vFDs);
-						
-						v.add(i.instance(j));
+					}else{
+						tupleID.get(j).add(fd);
 					}
+					
+					v.add(i.instance(j));
 
 				}else if(map.containsKey(premiseValue) && !map.get(premiseValue).getKey().contains(j)){
 					map.get(premiseValue).getKey().add(j);

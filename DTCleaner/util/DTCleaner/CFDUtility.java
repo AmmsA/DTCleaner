@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
 
 import weka.core.Instances;
@@ -123,8 +124,55 @@ public class CFDUtility {
 	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
 	 */
 	public static violatedTuples returnViolatedTuples(Instances i, HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs){
-		// TO BE WRITTEN
-		return null;
+		Instances v = new Instances(i,0);
+		
+		//Holds tuple index of violated tuples, and the CFD it violates
+		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
+
+		
+		for(LinkedList<SimpleImmutableEntry<Integer, String>> premise : CFDs.keySet()){
+			SimpleImmutableEntry<Integer, String> CFDRHSValue = CFDs.get(premise);
+			
+			//parsing CFD to String
+			String cfd = "";
+			for(SimpleImmutableEntry<Integer, String> entry : premise){
+				cfd += entry.getKey() + "=" + entry.getValue() + ",";
+			}
+			//delete last ","
+			cfd = cfd.substring(0, cfd.length()-1);
+			cfd += "->";
+			cfd += CFDRHSValue.getKey() + "=" + CFDRHSValue.getValue();
+						
+			for(int j = 0; j < i.numInstances(); j++){
+				// holds the lhs values from the dataset that match the CFDs premise (lhs)
+				LinkedList<SimpleImmutableEntry<Integer, String>> row = new LinkedList<SimpleImmutableEntry<Integer, String>>();
+				for(SimpleImmutableEntry<Integer, String> entry : premise){
+					row.add(new SimpleImmutableEntry<Integer, String>(entry.getKey(), i.instance(j).stringValue((entry.getKey()))));
+				}
+				
+				SimpleImmutableEntry<Integer, String> rowRHSValue = new SimpleImmutableEntry<Integer, String>(CFDRHSValue.getKey(), i.instance(j).stringValue(CFDRHSValue.getKey()));
+				
+				// found violating tuple
+				if(row.equals(premise) && !rowRHSValue.equals(CFDRHSValue)){
+					
+					if(!tupleID.containsKey(j)){
+						List<String> vCFDs = new LinkedList<String>();
+						vCFDs.add(cfd);
+						tupleID.put(j, vCFDs);
+					}else{
+						tupleID.get(j).add(cfd);
+					} 
+					
+					v.add(i.instance(j));
+				}
+			}		
+		}
+
+		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
+		
+		violatedTuples pair = new violatedTuples(v, tupleID);
+		return pair;
+
 	}
 	
 	/**
@@ -132,7 +180,7 @@ public class CFDUtility {
 	 * @param i, CFD
 	 * @return String representation of the CFDs with the attribute names included
 	 */
-	public static String FDtoString(Instances i, String CFD){
+	public static String CFDtoString(Instances i, String CFD){
 		// TBW
 		return null;
 	}
