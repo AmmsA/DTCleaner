@@ -127,24 +127,27 @@ public class FDUtility {
 	 * @return true if dataset satisfies all FDs, otherwise false.
 	 */
 	public static boolean checkFDSatisfiaction(Instances i,	HashMap<String, String[]> FDs) {		
-		HashMap<List<Object>,Object> map = new HashMap<List<Object>,Object>();
+		HashMap<Object, List<Object>> map = new HashMap<Object,List<Object>>();
+		
 		System.out.println("\nChecking FD sataisfactian...\n");
+		
 		for(String premiseID : FDs.keySet()){
 			String [] rhsIDs = FDs.get(premiseID);
 			for(int j = 0; j < i.numInstances(); j++){
 				List<Object> rhsValues = new LinkedList<Object>();
 				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
 				String premise = i.instance(j).toString(Integer.parseInt(premiseID));
-				if(map.containsKey(rhsValues) && !map.get(rhsValues).equals(premise)){
+				
+				if(map.containsKey(premise) && !map.get(premise).equals(rhsValues)){
 					
 					System.out.println("The following pair violate an FD:");
-					System.out.println(rhsValues.toString() + " " + premise);
-					System.out.println(rhsValues.toString() + " " + map.get(rhsValues) + "\n");
+					System.out.println(premise + " " + rhsValues.toString());
+					System.out.println(premise + " " + map.get(premise).toString()+ "\n");
 					
 					return false;
 				}
 				else{
-					map.put(Collections.unmodifiableList(rhsValues), premise);
+					map.put(premise, Collections.unmodifiableList(rhsValues));
 				}
 			}
 		}
@@ -162,18 +165,18 @@ public class FDUtility {
 	public static violatedTuples returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
 		Instances v = new Instances(i,0);
 		
-		//Holds RHS values in List<Object> and the premise and the tuple index in SImpleImmutableEntry<String,Integer>
-		HashMap<List<Object>,SimpleImmutableEntry<String,Integer>> map = new HashMap<List<Object>,SimpleImmutableEntry<String,Integer>>();
+		// Key is the premiseValue, and the value is an Entry containing tupleID values and RHS values.
+		HashMap<String, SimpleImmutableEntry<List<Integer>,List<Object>>> map = new HashMap<String, SimpleImmutableEntry<List<Integer>,List<Object>>>();
+
 		//Holds tuple index of violated tuples, and the FD it violates
 		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
-		
-		HashMap<String, SimpleImmutableEntry<String,Integer>> premises = new HashMap<String, SimpleImmutableEntry<String,Integer>>();
-		
+				
 		System.out.println("\nFinding violated tuples...\n");
 		
 		for(String premiseID : FDs.keySet()){
 			String [] rhsIDs = FDs.get(premiseID);
 			
+			// processing FD
 			String fd = premiseID+"->";
 			String rhs = "";
 			for(String r : rhsIDs) rhs = r + ",";
@@ -182,40 +185,46 @@ public class FDUtility {
 			fd = FDtoString(i, fd);
 			
 			for(int j = 0; j < i.numInstances(); j++){
+				
+				// get RHS values
 				List<Object> rhsValues = new LinkedList<Object>();
 				for(int k = 0; k < rhsIDs.length; k++) rhsValues.add(i.instance(j).toString(Integer.parseInt(rhsIDs[k])));
-				String premise = i.instance(j).toString(Integer.parseInt(premiseID));
-				if(map.containsKey(rhsValues) && !map.get(rhsValues).getKey().contentEquals(premise)){
-					int tupleIndex = map.get(rhsValues).getValue();
+				
+				// premiseValue
+				String premiseValue = i.instance(j).toString(Integer.parseInt(premiseID));
+				
+				if(map.containsKey(premiseValue) && !map.get(premiseValue).getValue().equals(rhsValues)){
+					List<Integer> tupleIndexes = map.get(premiseValue).getKey();
 
-					// Add index to list of violated tuples
-					// Add the tuple to the list of violated tuples
-
-					if(!tupleID.containsKey(tupleIndex)){
-						List<String> vFDs = new LinkedList<String>();
-						vFDs.add(fd);
-						tupleID.put(tupleIndex, vFDs);
-						v.add(i.instance(tupleIndex));
+					// Add index to list of violated tuples and the FD it violated
+					// and add the tuple to the list of violated tuples
+					
+					// Here we take care of the ones already in the map
+					for(int index : tupleIndexes){
+						if(!tupleID.containsKey(index)){
+							List<String> vFDs = new LinkedList<String>();
+							vFDs.add(fd);
+							tupleID.put(index, vFDs);
+							
+							v.add(i.instance(index));
+						}
 					}
+					
+					// Here we take care of the tuple we are currently processing
 					if(!tupleID.containsKey(j)){
 						List<String> vFDs = new LinkedList<String>();
 						vFDs.add(fd);
 						tupleID.put(j,vFDs);
+						
 						v.add(i.instance(j));
 					}
 
-				}else if(!map.containsKey(rhsValues) && premises.keySet().contains(premise)){
-					if(!tupleID.containsKey(premises.get(premise).getValue())){
-						List<String> vFDs = new LinkedList<String>();
-						vFDs.add(fd);
-						tupleID.put(j,vFDs);
-						v.add(i.instance(j));
-						v.add(i.instance(premises.get(premise).getValue()));
-					}
-					
+				}else if(map.containsKey(premiseValue) && !map.get(premiseValue).getKey().contains(j)){
+					map.get(premiseValue).getKey().add(j);
 				}else{
-					map.put(Collections.unmodifiableList(rhsValues), new SimpleImmutableEntry<String,Integer>(premise,j));
-					premises.put(premise, new SimpleImmutableEntry<String,Integer>(premise,j));
+					List<Integer> newIDsList = new LinkedList<Integer>();
+					newIDsList.add(j);
+					map.put(premiseValue, new SimpleImmutableEntry<List<Integer>,List<Object>>(newIDsList,rhsValues));
 				}
 			}
 		}
