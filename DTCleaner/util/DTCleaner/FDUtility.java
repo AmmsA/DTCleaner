@@ -85,7 +85,7 @@ public class FDUtility {
 		
 		for(String premise : FDs.keySet()){
 			StringBuilder fd = new StringBuilder();
-			fd.append(Utils.padLeft("" + (counter++), 4)+" ");
+			fd.append(Utils.padLeft("" + (counter++), 4)+"   ");
 			fd.append(i.attribute(Integer.parseInt(premise)).name());
 			fd.append(" -> ");
 			for(String RHS : FDs.get(premise)){

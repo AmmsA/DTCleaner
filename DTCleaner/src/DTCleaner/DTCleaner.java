@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.AbstractMap.SimpleImmutableEntry;
 
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -15,10 +17,12 @@ import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 
 
-public class DTCleaner {
+public class DTCleaner{
 	
 	// Set of FDs
 	HashMap<String, String[]> FDs;
+	// Set of CFDs
+	HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs;
 	// Dataset instance
 	Instances i;
 	// Violated instances
@@ -47,6 +51,10 @@ public class DTCleaner {
 		System.out.println(FDUtility.toSummaryString(i, FDs));
 		// initialize violated instances, same header as original instance.
 		updateViolated();
+		// Reading CFDs
+		CFDs = CFDUtility.readCFDs("data/CFDs");
+		System.out.println("\nCFDs summary:");
+		System.out.println(CFDUtility.toSummaryString(i, CFDs));
 	}
 	
 	/**
@@ -168,8 +176,7 @@ public class DTCleaner {
 			System.exit(1);
 		}
 		
-		//DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-		//CFDUtility.readCFDs("data/CFD");
+		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
 		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});

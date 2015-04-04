@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import weka.core.Instances;
+import weka.core.Utils;
+
 public class CFDUtility {
 
 	/**
@@ -75,6 +78,42 @@ public class CFDUtility {
 		}
 		
 		return CFDs;
+	}
+	
+	/**
+	 * Prints a summary of CFDs
+	 * @param CFDs
+	 * @param i
+	 * @return String summary: summary of CFDs
+	 */
+	public static String toSummaryString(Instances i, HashMap<LinkedList<SimpleImmutableEntry<Integer, String>>, SimpleImmutableEntry<Integer, String>> CFDs){
+		StringBuilder summary = new StringBuilder();
+		summary.append("Num CFDs: "+CFDs.keySet().size()+"\n\n");
+		
+		int counter = 1;
+		
+		for(LinkedList<SimpleImmutableEntry<Integer, String>> premise : CFDs.keySet()){
+			StringBuilder cfd = new StringBuilder();
+			cfd.append(Utils.padLeft("" + (counter++), 4)+"   ");
+			
+			for(SimpleImmutableEntry<Integer, String> singleLHS : premise){
+				cfd.append(i.attribute(singleLHS.getKey()).name());
+				cfd.append("=");
+				cfd.append(singleLHS.getValue());
+				cfd.append(",");
+			}
+			// delete last ","
+			cfd.deleteCharAt(cfd.length() - 1);
+			
+			cfd.append(" -> ");
+			SimpleImmutableEntry<Integer, String> rhsValue = CFDs.get(premise);
+			cfd.append(i.attribute(rhsValue.getKey()).name() + "="+rhsValue.getValue());			
+			
+			//add to summary
+			summary.append(cfd.toString() + "\n");
+		}
+		
+		return summary.toString();
 	}
 	
 }
