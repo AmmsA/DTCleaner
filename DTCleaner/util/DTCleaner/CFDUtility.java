@@ -181,8 +181,47 @@ public class CFDUtility {
 	 * @return String representation of the CFDs with the attribute names included
 	 */
 	public static String CFDtoString(Instances i, String CFD){
-		// TBW
-		return null;
-	}
+		StringBuilder result = new StringBuilder();
+		
+		if(CFD.contains("->")){
+			String [] cfd = CFD.split("->");
+			
+			String [] premise;
+			if(cfd[0].contains(",")) premise = cfd[0].split(",");
+			else premise = new String[]{cfd[0]};
+			
+			for(String p : premise){
+				String [] w;
+				if(p.contains("=")) w = p.split("=");
+				else{
+					// invalid CFD syntax
+					System.out.println("invalid CFD syntax: "+ CFD);
+					return null;
+				}
+				
+				result.append(i.attribute(Integer.parseInt(w[0])).name() + "=" + w[1] + ",");
+				
+			}
+			
+			// remove last ","
+			result.deleteCharAt(result.length()-1);
+			result.append("->");
+			
+			
+			String [] rhs;
+			if(cfd[1].contains("=")) rhs = cfd[1].split("=");
+			else{
+				// invalid CFD syntax
+				System.out.println("invalid CFD syntax: "+ CFD);
+				return null;
+			}
+
+			result.append(i.attribute(Integer.parseInt(rhs[0])).name() + "=" + rhs[1]);
+			
+		}
+		
+		return result.toString();
+	}	
+	
 	
 }

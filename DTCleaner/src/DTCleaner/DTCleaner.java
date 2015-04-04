@@ -194,7 +194,6 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-		
 
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
