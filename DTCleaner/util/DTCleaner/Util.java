@@ -100,4 +100,15 @@ public class Util {
 		
 		return i;
 	}
+	
+	/**
+	 * 
+	 * Removes the first and last chars from a string.
+	 * 
+	 * @param str input String
+	 * @return str with first and last chars removed
+	 */
+	public static String removeFirstAndLastChars(String str){
+		return str.substring(1, str.length() - 1);
+	}
 }

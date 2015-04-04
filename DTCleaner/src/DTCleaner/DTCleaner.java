@@ -96,7 +96,7 @@ public class DTCleaner {
 	 */
 	public boolean isFDSatisfied(){
 		
-		return FDUtility.checkFDSatisfiaction(i, FDs);
+		return FDUtility.checkFDSatisfaction(i, FDs);
 	}
 	
 	/**
@@ -168,7 +168,8 @@ public class DTCleaner {
 			System.exit(1);
 		}
 		
-		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
+		//DTCleaner cleaner = new DTCleaner(args[0],args[1]);
+		//CFDUtility.readCFDs("data/CFD");
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
 		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});

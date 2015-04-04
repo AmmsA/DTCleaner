@@ -18,19 +18,6 @@ import weka.core.Instances;
 
 
 /**
- * Used to return two objects in returnViolatedTuples
- */
-class violatedTuples {
-	public final Instances instances;
-	public final HashMap<Integer, List<String>> tupleID;
-	
-	public violatedTuples(Instances instances, HashMap<Integer, List<String>> tupleID) {
-		this.instances = instances;
-		this.tupleID = tupleID;
-	}
-}
-
-/**
  * Functional Dependency Utilities
  * 
  */
@@ -81,7 +68,6 @@ public class FDUtility {
 			}
 		}
 		
-		
 		return FDs;
 	}
 	
@@ -126,7 +112,7 @@ public class FDUtility {
 	 * @param FDs: list of FDs
 	 * @return true if dataset satisfies all FDs, otherwise false.
 	 */
-	public static boolean checkFDSatisfiaction(Instances i,	HashMap<String, String[]> FDs) {		
+	public static boolean checkFDSatisfaction(Instances i,	HashMap<String, String[]> FDs) {		
 		HashMap<Object, List<Object>> map = new HashMap<Object,List<Object>>();
 		
 		System.out.println("\nChecking FD sataisfactian...\n");
@@ -160,8 +146,6 @@ public class FDUtility {
 	 * @param FDs
 	 * @return v, tupleIDs: Violated instances in weka instances format, and a list of tupleIDs and their FDs that they violate
 	 */
-	
-	//needs to be fixed
 	public static violatedTuples returnViolatedTuples(Instances i, HashMap<String, String[]> FDs){
 		Instances v = new Instances(i,0);
 		
@@ -231,7 +215,6 @@ public class FDUtility {
 	
 		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
 		
-		System.out.println(v);
 		violatedTuples pair = new violatedTuples(v, tupleID);
 		return pair;
 		
