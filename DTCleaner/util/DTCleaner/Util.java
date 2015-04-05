@@ -31,17 +31,18 @@ public class Util {
 	
 	/**
 	 * Saves the instances i to an arff file with name being filename
+	 * Note: ".arff" should be included.
 	 * 
 	 * @param i
 	 * @param filename
 	 * @throws IOException 
 	 */
 	public static void saveArff(Instances i, String filename) throws IOException{
-		System.out.println("\nSaving arff file: " + filename + ".arff ...");
+		System.out.println("\nSaving arff file: " + filename);
 		
 		ArffSaver saver = new ArffSaver();
 		saver.setInstances(i);
-		saver.setFile(new File(filename+".arff"));
+		saver.setFile(new File(filename));
 		saver.writeBatch();
 	}
 	

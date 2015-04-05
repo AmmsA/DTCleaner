@@ -26,9 +26,9 @@ public class DTCleaner{
 	// Set of CFDs
 	Multiset<CFD> CFDs;
 	// Dataset instance
-	Instances i;
+	private Instances i;
 	// Violated instances
-	Instances violated;
+	private Instances violated;
 	// holds index of violated tuples and the list of FDs that it violates.
 	HashMap<Integer, List<String>> violatedTuplesMap;
 	
@@ -113,8 +113,20 @@ public class DTCleaner{
 		violatedTuplesMap = v.tupleID;
 	}
 	
+	/**
+	 * Returns the set of violating instances
+	 * @return
+	 */
 	public Instances getViolatedInstancs(){
 		return violated;
+	}
+	
+	/**
+	 * Returns the set of instances
+	 * @return instances
+	 */
+	public Instances getInstancs(){
+		return i;
 	}
 	
 	/**
@@ -132,11 +144,18 @@ public class DTCleaner{
 	public void printInstances(){
 		System.out.println(i);
 	}
+
+	/**
+	 * Prints the violating instances to console.
+	 */
+	public void printViolatingInstances(){
+		System.out.println(violated);
+	}
 	
 	/**
 	 * Prints the violating tuple index and the FDs that it violates.
 	 */
-	public void printViolatingTuplesMap(){
+	public void printFDViolatingTuplesMap(){
 		int count = 0;
 		
 		//Print header
@@ -160,14 +179,55 @@ public class DTCleaner{
 	}
 	
 	/**
+	 * Prints the violating tuple index and the CFDs that it violates.
+	 */
+	public void printCFDViolatingTuplesMap(){
+		int count = 0;
+		
+		//Print header
+		System.out.println("\n"+ Utils.padLeft("Num" , 5)+
+				"   " + Utils.padLeft("Index" , 5)+
+				"   " + " CFD");
+		
+		for(int index : violatedTuplesMap.keySet()){
+			StringBuilder row = new StringBuilder();
+			row.append(Utils.padLeft("" + (count++), 5)+"   ");
+			row.append(Utils.padLeft("" + (index), 5)+" : ");
+			for(String CFD : violatedTuplesMap.get(index)){
+				row.append(CFD+ " | ");
+			}
+			
+			//remove the last " | " chars
+			row.delete(row.length()-3, row.length());
+			
+			System.out.println(row);
+		}
+	}
+	
+	/**
 	 * Replaces violating entries (w.r.t FDs) in the list of violating tuples with missing values
 	 */
-	public void replaceViolatingTuplesWithMissing(){
+	public void replaceFDViolatingTuplesWithMissing(){
 		for(String premise : FDs.keySet()){
 			ArrayList<Integer> attrIndexes = new ArrayList<Integer>();
 			attrIndexes.add(Integer.parseInt(premise));
 			for(String rhs : FDs.get(premise)){
 				attrIndexes.add(Integer.parseInt(rhs));
+			}
+			
+			setMissingAtIndex(violated, Util.convertIntegers(attrIndexes));
+		}
+	}
+	
+	/**
+	 * Replaces violating entries (w.r.t CFDs) in the list of violating tuples with missing values
+	 */
+	public void replaceCDFViolatingTuplesWithMissing(){
+		for(CFD cfd : CFDs){
+			ArrayList<Integer> attrIndexes = new ArrayList<Integer>();
+			attrIndexes.add(cfd.getRHS().getKey());
+			for(SimpleImmutableEntry<Integer, String> lhs : cfd.getPremise()){
+				attrIndexes.add(lhs.getKey());
 			}
 			
 			setMissingAtIndex(violated, Util.convertIntegers(attrIndexes));
@@ -196,10 +256,12 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-
-		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
-		//cleaner.seperateViolatedInstances();
-		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});
+		cleaner.replaceCDFViolatingTuplesWithMissing();
+		cleaner.seperateViolatedInstances();
+		cleaner.printInstances();
+		cleaner.printViolatingInstances();
+		Util.saveArff(cleaner.getInstancs(), "data/hospital-train.arff");
+		Util.saveArff(cleaner.getViolatedInstancs(), "data/hospital-test.arff");
 		//System.out.println(cleaner.getViolatedInstancs());
 	}
 
