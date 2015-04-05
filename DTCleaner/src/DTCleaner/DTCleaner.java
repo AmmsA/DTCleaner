@@ -196,7 +196,7 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-		System.out.println(cleaner.getViolatedInstancs());
+
 		//Util.mergeAttributes(cleaner.i, new int[]{5,2,3,4});
 		//cleaner.seperateViolatedInstances();
 		//cleaner.setMissingAtIndex(cleaner.getViolatedInstancs(), new int[]{cleaner.getViolatedInstancs().numAttributes()-1});
