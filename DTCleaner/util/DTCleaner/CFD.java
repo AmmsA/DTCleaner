@@ -14,4 +14,17 @@ public class CFD {
 	public LinkedList<SimpleImmutableEntry<Integer,String>> getPremise(){	return premise; } 
 	public SimpleImmutableEntry<Integer,String> getRHS(){	return rhs; } 
 	
+	public String CFDToString(){
+		StringBuilder str = new StringBuilder();
+		for(SimpleImmutableEntry<Integer, String> lhs : premise){
+			str.append(lhs.getKey() + "=" + lhs.getValue());
+			str.append(",");
+		}
+		// delete last ","
+		str.deleteCharAt(str.length()-1);
+		str.append("->");
+		str.append(rhs.getKey() + "=" + rhs.getValue());
+		
+		return str.toString();
+	}
 }

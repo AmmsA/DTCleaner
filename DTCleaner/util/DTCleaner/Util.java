@@ -1,7 +1,11 @@
 package DTCleaner;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -111,5 +115,50 @@ public class Util {
 	 */
 	public static String removeFirstAndLastChars(String str){
 		return str.substring(1, str.length() - 1);
+	}
+	
+	/**
+	 * Makes a setting file for Clus to run
+	 * @param dataFile, name of training file
+	 * @param testFile, name of test file
+	 * @param attributesTarget, the id of targets
+	 * @param treeHeuristic, type of heuristic
+	 * @param location, of where to save the setting.s file
+	 */
+	public static void makeSettingFile(String dataFile, String testFile, ArrayList<Integer> attributesTarget, HeuristicType treeHeuristic, String location){
+		PrintWriter writer;
+		try {
+			writer = new PrintWriter(location+"/setting.s", "UTF-8");
+			
+			writer.println();
+			writer.println("[Data]");
+			writer.println("File = " + dataFile);
+			writer.println("TestSet = " + testFile);
+			
+			writer.println();
+			writer.println("[Output]");
+			writer.println("WritePredictions = {Test}");
+			
+
+			StringBuilder targetsFormatted = new StringBuilder();
+			for(int singleTarget : attributesTarget) targetsFormatted.append(singleTarget+"-");
+			targetsFormatted.deleteCharAt(targetsFormatted.length()-1);
+			writer.println();
+			writer.println("[Attributes]");
+			writer.println("Target = " + targetsFormatted.toString());
+			
+			writer.println();
+			writer.println("[Tree]");
+			writer.println("Heuristic = "+ treeHeuristic.toString());
+			
+			writer.println();
+			writer.close();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
 	}
 }

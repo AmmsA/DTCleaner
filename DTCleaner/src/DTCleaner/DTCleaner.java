@@ -1,22 +1,21 @@
 package DTCleaner;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.AbstractMap.SimpleImmutableEntry;
 
 import com.google.common.collect.Multiset;
 
-import weka.core.Attribute;
-import weka.core.FastVector;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
-import weka.filters.Filter;
 
 
 public class DTCleaner{
@@ -246,6 +245,52 @@ public class DTCleaner{
 		}
 	}
 
+	/**
+	 * Makes the classification model for each CFD and produces predictions for the test file.
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	public void makeModel() throws IOException, InterruptedException{
+		int folder = 1;
+		System.out.println(CFDs.size());
+		for(CFD cfd : CFDs){
+			
+			System.out.println("\nMaking model for: " + CFDUtility.CFDtoString(i, cfd.CFDToString()));
+			
+			ArrayList<Integer> targets = new ArrayList<Integer>();
+			targets.add(cfd.getRHS().getKey());
+			for(SimpleImmutableEntry<Integer, String> lhs : cfd.getPremise()){
+				targets.add(lhs.getKey());
+			}
+			
+			Util.saveArff(i, "exp/"+folder+"/train.arff");
+			Util.saveArff(violated, "exp/"+folder+"/test.arff");
+			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.Gain, "exp/"+folder+"/");
+			
+			System.out.println("computing...");
+			
+			// Run a java app in a separate system process
+			Process proc = Runtime.getRuntime().exec("java -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
+			BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+			String line;
+			while((line = input.readLine()) != null){
+			    System.out.println(line);
+			}
+			
+			input.close();
+			
+			folder++;
+		}
+	}
+	
+	/**
+	 * Replaces the errornous entries by the predictions made by the model.
+	 */
+	public void replaceByPredictions(){
+		//TODO
+	}
+	
+	
 	
 	
 	public static void main(String[] args) throws Exception {
@@ -256,12 +301,12 @@ public class DTCleaner{
 		}
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
-		cleaner.replaceCDFViolatingTuplesWithMissing();
 		cleaner.seperateViolatedInstances();
 		cleaner.printInstances();
 		cleaner.printViolatingInstances();
-		Util.saveArff(cleaner.getInstancs(), "data/hospital-train.arff");
-		Util.saveArff(cleaner.getViolatedInstancs(), "data/hospital-test.arff");
+		
+		cleaner.makeModel();
+		
 		//System.out.println(cleaner.getViolatedInstancs());
 	}
 
