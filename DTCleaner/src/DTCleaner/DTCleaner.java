@@ -8,8 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.google.common.collect.Multiset;
 
@@ -253,14 +258,30 @@ public class DTCleaner{
 	public void makeModel() throws IOException, InterruptedException{
 		int folder = 1;
 		System.out.println(CFDs.size());
+		
+		// this will allow us to keep track of which CFDs we made a model for. We can't make one for each because some CFDs 
+		// will have the same premise and they will be considered as one CFD
+		HashSet<CFD>  seen = new HashSet<CFD>();
+		
 		for(CFD cfd : CFDs){
+			
+			// check if we have already dealt with this CFD
+			if(seen.contains(cfd)) continue;
 			
 			System.out.println("\nMaking model for: " + CFDUtility.CFDtoString(i, cfd.CFDToString()));
 			
-			ArrayList<Integer> targets = new ArrayList<Integer>();
-			targets.add(cfd.getRHS().getKey());
+			TreeSet<Integer> targets = new TreeSet<Integer>();
 			for(SimpleImmutableEntry<Integer, String> lhs : cfd.getPremise()){
 				targets.add(lhs.getKey());
+			}
+			
+			targets.add(cfd.getRHS().getKey());
+			
+			for(CFD otherCFDsWithSamePremise : CFDs){
+				if(cfd.getPremise().equals(otherCFDsWithSamePremise.getPremise())){
+					targets.add(otherCFDsWithSamePremise.getRHS().getKey());
+					seen.add(otherCFDsWithSamePremise);
+				}
 			}
 			
 			Util.saveArff(i, "exp/"+folder+"/train.arff");
@@ -280,6 +301,8 @@ public class DTCleaner{
 			input.close();
 			
 			folder++;
+			
+			seen.add(cfd);
 		}
 	}
 	

@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import weka.core.Attribute;
 import weka.core.FastVector;
@@ -125,7 +126,7 @@ public class Util {
 	 * @param treeHeuristic, type of heuristic
 	 * @param location, of where to save the setting.s file
 	 */
-	public static void makeSettingFile(String dataFile, String testFile, ArrayList<Integer> attributesTarget, HeuristicType treeHeuristic, String location){
+	public static void makeSettingFile(String dataFile, String testFile, Set<Integer> targets, HeuristicType treeHeuristic, String location){
 		PrintWriter writer;
 		try {
 			writer = new PrintWriter(location+"/setting.s", "UTF-8");
@@ -141,7 +142,7 @@ public class Util {
 			
 
 			StringBuilder targetsFormatted = new StringBuilder();
-			for(int singleTarget : attributesTarget) targetsFormatted.append(singleTarget+"-");
+			for(int singleTarget : targets) targetsFormatted.append(singleTarget+"-");
 			targetsFormatted.deleteCharAt(targetsFormatted.length()-1);
 			writer.println();
 			writer.println("[Attributes]");
