@@ -53,7 +53,8 @@ public class CSVtoArff {
 		saver.writeBatch();
 				
 		sc.close();
-		
+		System.out.println("\nSaved.\n");
+
 	}
 	
 	

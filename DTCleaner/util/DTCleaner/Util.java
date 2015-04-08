@@ -166,6 +166,10 @@ public class Util {
 			writer.println();
 			writer.println("[Tree]");
 			writer.println("Heuristic = "+ treeHeuristic.toString());
+
+			writer.println();
+			writer.println("[Ensemble]");
+			writer.println("Optimize = y");
 			
 			writer.println();
 			

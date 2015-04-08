@@ -62,7 +62,7 @@ public class DTCleaner{
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
-		scource = new DataSource("data/hospital.arff");
+		scource = new DataSource("data/hospitalMed.arff");
 		orig = scource.getDataSet();
 		origInstancesSet = new LinkedHashSet<String>();
 		for(int j = 0; j < orig.numInstances(); j++){
@@ -282,7 +282,6 @@ public class DTCleaner{
 	 */
 	public void makeModel() throws IOException, InterruptedException{
 		int folder = 1;
-		System.out.println(CFDs.size());
 		
 		// this will allow us to keep track of which CFDs we made a model for. We can't make one for each because some CFDs 
 		// will have the same premise and they will be considered as one CFD
@@ -293,35 +292,56 @@ public class DTCleaner{
 			// check if we have already dealt with this CFD
 			if(seen.contains(cfd)) continue;
 			
-			System.out.println("\nMaking model for: " + CFDUtility.CFDtoString(i, cfd.CFDToString()));
+			System.out.println("\nMaking model..");// for: " + CFDUtility.CFDtoString(i, cfd.CFDToString()));
 			
 			TreeSet<Integer> targets = new TreeSet<Integer>();
 			for(SimpleImmutableEntry<Integer, String> lhs : cfd.getPremise()){
 				targets.add(lhs.getKey());
 			}
 			
-			targets.add(cfd.getRHS().getKey());
-			
+
 			for(CFD otherCFDsWithSamePremise : CFDs){
-				if(cfd.getPremise().equals(otherCFDsWithSamePremise.getPremise())){
-					targets.add(otherCFDsWithSamePremise.getRHS().getKey());
+				if(otherCFDsWithSamePremise.equals(cfd)) continue;
+				
+				TreeSet<Integer> otherTargets = new TreeSet<Integer>();
+				for(SimpleImmutableEntry<Integer, String> lhs : otherCFDsWithSamePremise.getPremise()){
+					otherTargets.add(lhs.getKey());
+				}
+				
+
+				if(otherTargets.equals(targets)){
 					seen.add(otherCFDsWithSamePremise);
 				}
 			}
+			
+			//add rhs values of CFDs that have same premise keys
+			for(CFD seenCFD : seen){
+				targets.add(seenCFD.getRHS().getKey());
+			}
+			
+			targets.add(cfd.getRHS().getKey());
+
 			
 			Util.saveArff(i, "exp/"+folder+"/train.arff");
 			Util.saveArff(violated, "exp/"+folder+"/test.arff");
 			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.ReducedError, "exp/"+folder+"/");
 			
 			System.out.println("computing...");
+
+
+			long start = System.nanoTime();    
 			
+
 			// Run a java app in a separate system process
-			Process proc = Runtime.getRuntime().exec("java -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
+			Process proc = Runtime.getRuntime().exec("java -Xmx512m -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
 			BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 			String line;
 			while((line = input.readLine()) != null){
 			    System.out.println(line);
 			}
+
+			long elapsedTime = System.nanoTime() - start;
+			System.out.println("Elapsed Time: " + elapsedTime);
 			
 			input.close();
 			
@@ -463,7 +483,7 @@ public class DTCleaner{
 		cleaner.seperateViolatedInstances();
 		//cleaner.printInstances();
 		//cleaner.printViolatingInstances();
-		
+		//cleaner.printCFDViolatingTuplesMap();
 		cleaner.makeModel();
 
 		cleaner.replaceByPredictions();

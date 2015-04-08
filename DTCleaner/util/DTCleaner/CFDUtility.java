@@ -130,20 +130,44 @@ public class CFDUtility {
 		//Holds tuple index of violated tuples, and the CFD it violates
 		HashMap<Integer, List<String>> tupleID = new HashMap<Integer, List<String>>();
 
+		for(int j = 0; j < i.numInstances(); j++){
+			for(CFD currentCFD : CFDs){
+				//parsing CFD description to String
+				String cfdDesc = currentCFD.CFDToString();
+				
+				LinkedList<SimpleImmutableEntry<Integer, String>> row = new LinkedList<SimpleImmutableEntry<Integer, String>>();
+				for(SimpleImmutableEntry<Integer, String> LHSEntry : currentCFD.getPremise()){
+					row.add(new SimpleImmutableEntry<Integer, String>(LHSEntry.getKey(), i.instance(j).stringValue((LHSEntry.getKey()))));
+				}
+				
+				SimpleImmutableEntry<Integer, String> rowRHSValue = new SimpleImmutableEntry<Integer, String>(currentCFD.getRHS().getKey(), i.instance(j).stringValue(currentCFD.getRHS().getKey()));
+								
+				// found violating tuple
+				if(row.equals(currentCFD.getPremise()) && !rowRHSValue.equals(currentCFD.getRHS())){
+					if(!tupleID.containsKey(j)){
+						List<String> vCFDs = new LinkedList<String>();
+						vCFDs.add(cfdDesc);
+						tupleID.put(j, vCFDs);
+						v.add(i.instance(j));
+						System.out.println(i.instance(j));
+					}else{
+						tupleID.get(j).add(cfdDesc);
+					}
+				}
+			}
+		}
 		
+		System.out.println("Found: "+ v.numInstances() + " violating tuples.");
+
+		violatedTuples pair = new violatedTuples(v, tupleID);
+		return pair;
+		/*
 		for(CFD currentCFD : CFDs){
 			SimpleImmutableEntry<Integer, String> CFDRHSValue = currentCFD.getRHS();
 			
 			//parsing CFD to String
-			String cfd = "";
-			for(SimpleImmutableEntry<Integer, String> entry : currentCFD.getPremise()){
-				cfd += entry.getKey() + "=" + entry.getValue() + ",";
-			}
-			//delete last ","
-			cfd = cfd.substring(0, cfd.length()-1);
-			cfd += "->";
-			cfd += CFDRHSValue.getKey() + "=" + CFDRHSValue.getValue();
-						
+			String cfd = currentCFD.CFDToString();
+			
 			for(int j = 0; j < i.numInstances(); j++){
 				// holds the lhs values from the dataset that match the CFDs premise (lhs)
 				LinkedList<SimpleImmutableEntry<Integer, String>> row = new LinkedList<SimpleImmutableEntry<Integer, String>>();
@@ -152,7 +176,7 @@ public class CFDUtility {
 				}
 				
 				SimpleImmutableEntry<Integer, String> rowRHSValue = new SimpleImmutableEntry<Integer, String>(CFDRHSValue.getKey(), i.instance(j).stringValue(CFDRHSValue.getKey()));
-				
+				System.out.println("row lhs: " + row + "  rhs: "+CFDRHSValue);
 				// found violating tuple
 				if(row.equals(currentCFD.getPremise()) && !rowRHSValue.equals(CFDRHSValue)){
 					
@@ -160,11 +184,12 @@ public class CFDUtility {
 						List<String> vCFDs = new LinkedList<String>();
 						vCFDs.add(cfd);
 						tupleID.put(j, vCFDs);
+						v.add(i.instance(j));
+
 					}else{
 						tupleID.get(j).add(cfd);
-						v.add(i.instance(j));
 					} 
-					
+
 				}
 			}		
 		}
@@ -173,7 +198,7 @@ public class CFDUtility {
 
 		violatedTuples pair = new violatedTuples(v, tupleID);
 		return pair;
-
+		*/
 	}
 	
 	/**
