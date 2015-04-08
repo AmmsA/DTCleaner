@@ -1,6 +1,11 @@
 package DTCleaner;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -18,6 +23,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.Multiset;
 
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -35,7 +41,11 @@ public class DTCleaner{
 	private Instances violated;
 	// holds index of violated tuples and the list of FDs that it violates.
 	HashMap<Integer, List<String>> violatedTuplesMap;
-	
+	// Number of CFDs when merged by premise
+	private int CFDsMergedSize;
+	// copy of correct (no noise added) dataset instance. Not modified and used for testing how many tuples were correctly classified
+	private Instances orig;
+	private Set<String> origInstancesSet; // assuming orig doesn't contain any duplicates
 	/**
 	 * 
 	 * @param dataInput: The input data set location, e.g. data/hospital.arff 
@@ -52,6 +62,14 @@ public class DTCleaner{
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
+		scource = new DataSource("data/hospital.arff");
+		orig = scource.getDataSet();
+		origInstancesSet = new LinkedHashSet<String>();
+		for(int j = 0; j < orig.numInstances(); j++){
+			Instance inst = orig.instance(j);
+			origInstancesSet.add(inst.toString());
+		}
+		
 		
 		// Reading CFDs
 		CFDs = CFDUtility.readCFDs("data/CFDs");
@@ -133,6 +151,13 @@ public class DTCleaner{
 		return i;
 	}
 	
+	/**
+	 * Returns the number of CFDs when merged by premise
+	 * @return CFDsMergedSize
+	 */
+	public int getCFDsMergedSize(){
+		return CFDsMergedSize;
+	}
 	/**
 	 * Checks wheather the data instance satisfies our FDs
 	 * @return boolean
@@ -286,7 +311,7 @@ public class DTCleaner{
 			
 			Util.saveArff(i, "exp/"+folder+"/train.arff");
 			Util.saveArff(violated, "exp/"+folder+"/test.arff");
-			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.Gain, "exp/"+folder+"/");
+			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.ReducedError, "exp/"+folder+"/");
 			
 			System.out.println("computing...");
 			
@@ -304,13 +329,124 @@ public class DTCleaner{
 			
 			seen.add(cfd);
 		}
+		
+		CFDsMergedSize = folder-1;
 	}
 	
 	/**
 	 * Replaces the errornous entries by the predictions made by the model.
+	 * @throws IOException 
 	 */
-	public void replaceByPredictions(){
-		//TODO
+	public void replaceByPredictions() throws IOException{
+		
+		System.out.println("\nReplacing errornous entries with the predicted values");
+		
+		for(int folder = 1; folder <= CFDsMergedSize; folder++){
+			
+			// The number of target attributes for this model
+			int numOfTargets = -1;
+			// open predictions file
+			FileInputStream fs = new FileInputStream("exp/"+folder+"/setting.s");
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs));
+			
+			String line = br.readLine();
+			while(line != null){
+				if(line.contains("TargetSize = ")) {
+					line = line.replaceAll("\\D+","");
+					numOfTargets = Integer.parseInt(line);
+				}else line = br.readLine();
+			}
+			
+			if(numOfTargets < 0){
+				System.out.println("\nError: Coudln't complete method replaceByPredictions()");
+				return;
+			}
+			
+		
+			// open predictions file
+			FileInputStream fs0 = new FileInputStream("exp/"+folder+"/setting.test.pred.arff");
+			BufferedReader br0 = new BufferedReader(new InputStreamReader(fs0));
+			
+			// skip lines until we reach line containing "@DATA"
+			
+			String predictedLine = br0.readLine();
+			while(predictedLine != null){
+				if(predictedLine.contentEquals("@DATA")) {
+					predictedLine = br0.readLine();
+					break;
+				}else predictedLine = br0.readLine();
+			}
+			
+			// open test file.
+			FileInputStream fs1 = new FileInputStream("exp/"+folder+"/test.arff");
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(fs1));
+
+		    String tmpFileName = "exp/"+folder+"/testCleaned.arff";
+		    BufferedWriter bw = new BufferedWriter(new FileWriter(tmpFileName));
+		    
+			String testLine = br1.readLine();
+			bw.write(testLine);
+			while(testLine != null){
+				if(testLine.toLowerCase().contentEquals("@data")) {
+					testLine = br1.readLine();
+					break;
+				}else testLine = br1.readLine();
+				bw.write(testLine+"\n");
+			}
+			
+			while(testLine != null){
+				System.out.println(predictedLine);
+				System.out.println(predictedLine.substring(0,
+					Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
+			
+				
+				System.out.println("replacing: " + predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)));
+				System.out.println("To       : " + predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)) );
+				System.out.println("In       : " + testLine+ "\n------------------");
+				
+				testLine = testLine.replace(predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)),
+						predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
+				
+				bw.write(testLine+"\n");
+				
+				predictedLine = br0.readLine();
+				testLine = br1.readLine();
+			}
+			
+			fs.close();
+			br.close();
+			fs0.close();
+			br0.close();
+			fs1.close();
+			br1.close();
+			bw.close();
+			
+			try {
+				printClassificationAccuracy("exp/"+folder+"/testCleaned.arff");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		
+	}
+	
+	public void printClassificationAccuracy(String dataInput) throws Exception{
+
+		System.out.println("\nCalculate how many tuples were correctly classified...");
+
+		DataSource scource = new DataSource(dataInput);
+		Instances testCleaned = scource.getDataSet();
+		
+	
+		System.out.println("\nThe following tuples were wrongly classified: ");
+		int correctCount = 0;
+		for(int j = 0; j < testCleaned.numInstances(); j++){
+			if(origInstancesSet.contains(testCleaned.instance(j).toString())) correctCount++;
+			else System.out.println(testCleaned.instance(j).toString());
+		}
+		float percent = (correctCount * 100.0f) / testCleaned.numInstances();
+		System.out.println("\n"+percent+"%: "+ correctCount + " out of " + testCleaned.numInstances() + " correctly classified." );
 	}
 	
 	
@@ -325,10 +461,12 @@ public class DTCleaner{
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
 		cleaner.seperateViolatedInstances();
-		cleaner.printInstances();
-		cleaner.printViolatingInstances();
+		//cleaner.printInstances();
+		//cleaner.printViolatingInstances();
 		
 		cleaner.makeModel();
+
+		cleaner.replaceByPredictions();
 		
 		//System.out.println(cleaner.getViolatedInstancs());
 	}

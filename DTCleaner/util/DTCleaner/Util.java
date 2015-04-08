@@ -108,6 +108,21 @@ public class Util {
 	}
 	
 	/**
+	 * Returns the index of the nth occurance of char c in string str
+	 * 
+	 * @param str
+	 * @param c
+	 * @param n
+	 * @return pos 
+	 */
+	public static int nthOccurrence(String str, char c, int n) {
+	    int pos = str.indexOf(c, 0);
+	    while (--n > 0 && pos != -1)
+	        pos = str.indexOf(c, pos+1);
+	    return pos;
+	}
+	
+	/**
 	 * 
 	 * Removes the first and last chars from a string.
 	 * 
@@ -153,6 +168,11 @@ public class Util {
 			writer.println("Heuristic = "+ treeHeuristic.toString());
 			
 			writer.println();
+			
+			writer.println("%TargetSize = " + targets.size());
+			
+			
+			
 			writer.close();
 			
 		} catch (FileNotFoundException e) {
