@@ -52,17 +52,16 @@ public class DTCleaner{
 	 * @param FDInput: The FD input, e.g. data/FDs.txt
 	 * @throws Exception 
 	 */
-	public DTCleaner(String dataInput, String FDInput) throws Exception{
+	public DTCleaner(String dataInput, String CFDInput) throws Exception{
 		
 		// Initialize variables
-		
 		// Reading dataset
 		DataSource scource = new DataSource(dataInput);
 		System.out.println("\nReading dataset: "+dataInput+"...");
 		i = scource.getDataSet();
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
-		scource = new DataSource("data/hospitalMed.arff");
+		scource = new DataSource("data/hospitalFewerAttr.arff");
 		orig = scource.getDataSet();
 		origInstancesSet = new LinkedHashSet<String>();
 		for(int j = 0; j < orig.numInstances(); j++){
@@ -72,7 +71,7 @@ public class DTCleaner{
 		
 		
 		// Reading CFDs
-		CFDs = CFDUtility.readCFDs("data/CFDs");
+		CFDs = CFDUtility.readCFDs(CFDInput);
 		System.out.println("\nCFDs summary:");
 		System.out.println(CFDUtility.toSummaryString(i, CFDs));
 
@@ -324,7 +323,7 @@ public class DTCleaner{
 			
 			Util.saveArff(i, "exp/"+folder+"/train.arff");
 			Util.saveArff(violated, "exp/"+folder+"/test.arff");
-			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.ReducedError, "exp/"+folder+"/");
+			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.Gain, "exp/"+folder+"/");
 			
 			System.out.println("computing...");
 
@@ -333,7 +332,7 @@ public class DTCleaner{
 			
 
 			// Run a java app in a separate system process
-			Process proc = Runtime.getRuntime().exec("java -Xmx512m -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
+			Process proc = Runtime.getRuntime().exec("java -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
 			BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 			String line;
 			while((line = input.readLine()) != null){
@@ -370,14 +369,18 @@ public class DTCleaner{
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs));
 			
 			String line = br.readLine();
+			String [] targetAttr = null; 
 			while(line != null){
+				if(line.contains("Target = ")){
+					targetAttr = line.substring(line.indexOf('=')+1, line.length()).split(",");
+				}
 				if(line.contains("TargetSize = ")) {
 					line = line.replaceAll("\\D+","");
 					numOfTargets = Integer.parseInt(line);
 				}else line = br.readLine();
 			}
 			
-			if(numOfTargets < 0){
+			if(numOfTargets < 0 || targetAttr == null){
 				System.out.println("\nError: Coudln't complete method replaceByPredictions()");
 				return;
 			}
@@ -415,17 +418,38 @@ public class DTCleaner{
 			}
 			
 			while(testLine != null){
-				System.out.println(predictedLine);
-				System.out.println(predictedLine.substring(0,
-					Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
+				//System.out.println(predictedLine);
+				//System.out.println(predictedLine.substring(0,Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
 			
 				
 				System.out.println("replacing: " + predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)));
 				System.out.println("To       : " + predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)) );
 				System.out.println("In       : " + testLine+ "\n------------------");
 				
-				testLine = testLine.replace(predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)),
-						predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
+				String [] orginalValues = predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)).split(",");
+				String [] predictedValues = predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)).split(",");
+				String [] testLineValues = testLine.split(",");
+				
+				int predictedValuesIndex = 0;
+				for(String t : targetAttr){
+					int tar = Integer.parseInt(t.replaceAll("[^0-9]", ""));
+					testLineValues[tar - 1] = predictedValues[predictedValuesIndex];
+					predictedValuesIndex++;
+				}
+				
+				StringBuilder replacedTestLine = new StringBuilder();
+				for(String s : testLineValues){
+					replacedTestLine.append(s+",");
+				}
+				replacedTestLine.deleteCharAt(replacedTestLine.length()-1);
+
+				
+				testLine = replacedTestLine.toString();
+
+				//System.out.println(testLine);
+				//System.out.println(predictedLine);
+				//System.out.println(predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)));
+				//System.out.println(predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
 				
 				bw.write(testLine+"\n");
 				

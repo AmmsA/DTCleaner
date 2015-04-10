@@ -157,7 +157,7 @@ public class Util {
 			
 
 			StringBuilder targetsFormatted = new StringBuilder();
-			for(int singleTarget : targets) targetsFormatted.append(singleTarget+"-");
+			for(int singleTarget : targets) targetsFormatted.append(singleTarget+1+",");
 			targetsFormatted.deleteCharAt(targetsFormatted.length()-1);
 			writer.println();
 			writer.println("[Attributes]");
