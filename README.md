@@ -104,4 +104,4 @@ SOFTWARE.
 Commun. ACM, 41(2):79{82, February 1998.
 
 [System]: http://www.mustafa-s.com/DTCleaner/sys.png
-[Logo]: http://www.mustafa-s.com/DTCleaner/DTCleaner.png
+[Logo]: http://www.mustafa-s.com/DTCleaner/logo.png
