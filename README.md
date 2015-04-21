@@ -22,8 +22,8 @@ level data for measures of different care ( heart attack care, heart failure car
 care, ...) and the following conditional functional dependencies (CFDs) used to detect
 erroneous tuples
 ```js
-CFD1 : hosp([Zip = 94115] -> [City = San Francisco])
-CFD2 : hosp([Zip = 36545] -> [City = Jackson])
+CFD1 : hosp([Zip = 36545] -> [City = Jackson])
+CFD2 : hosp([Zip = 94115] -> [City = San Francisco])
 ```
 where CFD1 (resp. CFD2) asserts that if the zip code is 94115 (resp. 36545), then the city
 name must be San Francisco (resp. Jackson).
