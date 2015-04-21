@@ -11,7 +11,15 @@ import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
 
-
+/**
+ * DescionTree Cleaner (DTCleaner) produces multi-target decision trees for the purpose of data cleaning:
+ * 		Detecting erroneous tuples in the dataset based on given set of conditional functional dependencies (CFDs)
+ * 		and building a classification model to predict erroneous tuples such that the data satisfies the CFDs,
+ * 		and semantically correct and similar to correct entries.  
+ * 
+ * @author Mustafa
+ *
+ */
 public class DTCleaner{
 	
 	// Set of FDs
@@ -24,11 +32,12 @@ public class DTCleaner{
 	private Instances violated;
 	// holds index of violated tuples and the list of FDs that it violates.
 	HashMap<Integer, List<String>> violatedTuplesMap;
-	// Number of CFDs when merged by premise
+	// Number of CFDs when merged by premise IDs
 	private int CFDsMergedSize;
-	// copy of correct (no noise added) dataset instance. Not modified and used for testing how many tuples were correctly classified
-	private Instances orig;
-	private Set<String> origInstancesSet; // assuming orig doesn't contain any duplicates
+	// copy of the ground truth (no noise added) dataset instance. Not modified and will only be used for testing the classifier accuracy.
+	private Instances groundTruth;
+	private Set<String> groundTruthInstancesSet; // Holds the tuples in groundTruth as strings. Note: assuming groundTruth doesn't contain any duplicates
+	
 	/**
 	 * 
 	 * @param dataInput: The input data set location, e.g. data/hospital.arff 
@@ -45,59 +54,28 @@ public class DTCleaner{
 		System.out.println("\nDataset summary:");
 		System.out.println(i.toSummaryString());
 		scource = new DataSource("data/hospitalFewerAttr.arff");
-		orig = scource.getDataSet();
-		origInstancesSet = new LinkedHashSet<String>();
-		for(int j = 0; j < orig.numInstances(); j++){
-			Instance inst = orig.instance(j);
-			origInstancesSet.add(inst.toString());
+		groundTruth = scource.getDataSet();
+		groundTruthInstancesSet = new LinkedHashSet<String>();
+		for(int j = 0; j < groundTruth.numInstances(); j++){
+			Instance inst = groundTruth.instance(j);
+			groundTruthInstancesSet.add(inst.toString());
 		}
-		
-		
+	
 		// Reading CFDs
 		CFDs = CFDUtility.readCFDs(CFDInput);
 		System.out.println("\nCFDs summary:");
 		System.out.println(CFDUtility.toSummaryString(i, CFDs));
 
-		/*// Reading FDs
-		FDs = FDUtility.readFDs(FDInput);
-		System.out.println("\nFDs summary:");
-		System.out.println(FDUtility.toSummaryString(i, FDs));
-		*/
-	
-		// initialize violated instances, same header as original instance.
+		// get violated instances (same header as original instance).
 		CFDupdateViolated();
 	}
 	
-	/**
-	 * Removes the violated instances from our training set.
-	 * This should be performed after updateViolated() method.
-	 * @return the new instances after removal
-	 */
-	public Instances seperateViolatedInstances(){
-		System.out.println("\nSeperating violating tuples from dataset...");
-		Object[] keys = violatedTuplesMap.keySet().toArray();
-		Arrays.sort(keys, Collections.reverseOrder());
-		int count = 0;
-		// it's important to iterate in descending order (from last to first), because when we remove
-		// an instance, the rest shifts by 1 position.
-		for(Object k : keys){
-			int index = (Integer) k;
-			i.delete(index);
-			count++;
-		}
-		if(violatedTuplesMap.keySet().size() >= 1) {
-			System.out.println("Removed: "+ count);
-			System.out.println("Num Instances left: "+ i.numInstances());
-		}
-		else System.out.println("Did not preform any removal. Violating tuples set is empty.");
-		return i;
-	}
 	
 	/**
 	 * Finds the violating tuples and returns
-	 * 1- Instances violated: contains the list of violating instances.
+	 * 1- Instances violated: contains the list of violating instances as a weka Instances object.
 	 * 2- HashMap that maps the tuple index in the dataset and a list of CFDs
-	 * 		that it violates.
+	 * 		that the tuple violates.
 	 */
 	private void CFDupdateViolated() {
 		violatedTuples v = CFDUtility.returnViolatedTuples(i, CFDs);
@@ -141,7 +119,7 @@ public class DTCleaner{
 		return CFDsMergedSize;
 	}
 	/**
-	 * Checks wheather the data instance satisfies our FDs
+	 * Checks whether the data instance satisfies our FDs
 	 * @return boolean
 	 */
 	public boolean isFDSatisfied(){
@@ -216,14 +194,43 @@ public class DTCleaner{
 	}
 	
 	/**
+	 * Removes the violated instances from our training set.
+	 * Note: this should be performed after updateViolated() method.
+	 * @return the new instances after removal
+	 */
+	public Instances seperateViolatedInstances(){
+		System.out.println("\nSeperating violating tuples from dataset...");
+		Object[] keys = violatedTuplesMap.keySet().toArray();
+		Arrays.sort(keys, Collections.reverseOrder());
+		
+		int count = 0;
+		// it's important to iterate in descending order (from last to first), because when we remove
+		// an instance, the rest shifts by 1 position.
+		for(Object k : keys){
+			int index = (Integer) k;
+			i.delete(index);
+			count++;
+		}
+		
+		if(violatedTuplesMap.keySet().size() >= 1) {
+			System.out.println("Removed: "+ count);
+			System.out.println("Num Instances left: "+ i.numInstances());
+		}
+		else System.out.println("Did not preform any removal. Violating tuples set is empty.");
+		
+		return i;
+	}
+	
+	
+	/**
 	 * Replaces violating entries (w.r.t FDs) in the list of violating tuples with missing values
 	 */
 	public void replaceFDViolatingTuplesWithMissing(){
 		for(String premise : FDs.keySet()){
 			ArrayList<Integer> attrIndexes = new ArrayList<Integer>();
 			attrIndexes.add(Integer.parseInt(premise));
-			for(String rhs : FDs.get(premise)){
-				attrIndexes.add(Integer.parseInt(rhs));
+			for(String RHS : FDs.get(premise)){
+				attrIndexes.add(Integer.parseInt(RHS));
 			}
 			
 			setMissingAtIndex(violated, Util.convertIntegers(attrIndexes));
@@ -266,22 +273,22 @@ public class DTCleaner{
 		int folder = 1;
 		
 		// this will allow us to keep track of which CFDs we made a model for. We can't make one for each because some CFDs 
-		// will have the same premise and they will be considered as one CFD
-		HashSet<CFD>  seen = new HashSet<CFD>();
+		// will have the same premise and they need to be considered as one CFD
+		HashSet<CFD>  seenCFDs = new HashSet<CFD>();
 		
 		for(CFD cfd : CFDs){
 			
-			// check if we have already dealt with this CFD
-			if(seen.contains(cfd)) continue;
+			// check if we have already build a model for this CFD
+			if(seenCFDs.contains(cfd)) continue;
 			
-			System.out.println("\nMaking model..");// for: " + CFDUtility.CFDtoString(i, cfd.CFDToString()));
+			System.out.println("\nMaking model..");
 			
 			TreeSet<Integer> targets = new TreeSet<Integer>();
 			for(SimpleImmutableEntry<Integer, String> lhs : cfd.getPremise()){
 				targets.add(lhs.getKey());
 			}
 			
-
+			// find other CFDs containing the same premise.
 			for(CFD otherCFDsWithSamePremise : CFDs){
 				if(otherCFDsWithSamePremise.equals(cfd)) continue;
 				
@@ -289,54 +296,53 @@ public class DTCleaner{
 				for(SimpleImmutableEntry<Integer, String> lhs : otherCFDsWithSamePremise.getPremise()){
 					otherTargets.add(lhs.getKey());
 				}
-				
 
 				if(otherTargets.equals(targets)){
-					seen.add(otherCFDsWithSamePremise);
+					seenCFDs.add(otherCFDsWithSamePremise);
 				}
 			}
 			
-			//add rhs values of CFDs that have same premise keys
-			for(CFD seenCFD : seen){
+			//add RHS values of CFDs that have same premise keys
+			for(CFD seenCFD : seenCFDs){
 				targets.add(seenCFD.getRHS().getKey());
 			}
 			
+			// targets now holds the RHS of all CFDs with same premise.
 			targets.add(cfd.getRHS().getKey());
 
 			
+			// make the configurations settings for "Clus" to build decision trees.
 			Util.saveArff(i, "exp/"+folder+"/train.arff");
 			Util.saveArff(violated, "exp/"+folder+"/test.arff");
 			Util.makeSettingFile("exp/"+folder+"/train.arff", "exp/"+folder+"/test.arff", targets, HeuristicType.Gain, "exp/"+folder+"/");
 			
-			System.out.println("computing...");
-
+			System.out.println("building...");
 
 			long start = System.nanoTime();    
 			
-
 			// Run a java app in a separate system process
 			Process proc = Runtime.getRuntime().exec("java -jar lib/Clus.jar " + "exp/"+folder+"/setting.s" );
 			BufferedReader input = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 			String line;
 			while((line = input.readLine()) != null){
-			    System.out.println(line);
+			    System.out.println(line); // output the result of the process
 			}
 
 			long elapsedTime = System.nanoTime() - start;
-			System.out.println("Elapsed Time: " + elapsedTime);
+			System.out.println("Elapsed Training Time: " + elapsedTime);
 			
 			input.close();
 			
 			folder++;
 			
-			seen.add(cfd);
+			seenCFDs.add(cfd);
 		}
 		
 		CFDsMergedSize = folder-1;
 	}
 	
 	/**
-	 * Replaces the errornous entries by the predictions made by the model.
+	 * Replaces the erroneous entries by the predictions made by the model.
 	 * @throws IOException 
 	 */
 	public void replaceByPredictions() throws IOException{
@@ -445,13 +451,18 @@ public class DTCleaner{
 				e.printStackTrace();
 			}
 		}
-		
-		
+			
 	}
 	
+	/**
+	 * Prints the accuracy of the classifier.
+	 * Note: this should be performed only when the ground truth data is given.
+	 * @param dataInput
+	 * @throws Exception
+	 */
 	public void printClassificationAccuracy(String dataInput) throws Exception{
 
-		System.out.println("\nCalculate how many tuples were correctly classified...");
+		System.out.println("\nCalculating how many tuples were correctly classified...");
 
 		DataSource scource = new DataSource(dataInput);
 		Instances testCleaned = scource.getDataSet();
@@ -460,14 +471,13 @@ public class DTCleaner{
 		System.out.println("\nThe following tuples were wrongly classified: ");
 		int correctCount = 0;
 		for(int j = 0; j < testCleaned.numInstances(); j++){
-			if(origInstancesSet.contains(testCleaned.instance(j).toString())) correctCount++;
+			if(groundTruthInstancesSet.contains(testCleaned.instance(j).toString())) correctCount++;
 			else System.out.println(testCleaned.instance(j).toString());
 		}
 		float percent = (correctCount * 100.0f) / testCleaned.numInstances();
+		
 		System.out.println("\n"+percent+"%: "+ correctCount + " out of " + testCleaned.numInstances() + " correctly classified." );
 	}
-	
-	
 	
 	
 	public static void main(String[] args) throws Exception {
