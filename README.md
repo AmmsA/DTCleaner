@@ -5,7 +5,6 @@ enterprises [1]. Businesses operating on dirty data are in risk of causing large
 financial loses. Maintaining data quality can also increases operational cost as business
 would need to spend time and resources to detect erroneous data and correct them. As data grows bigger these days, data repairing has became an important problem
 and an important research area.
-Data cleaning using multi-target decision tree:
 
 DTCleaner produces multi-target decision trees for the purpose of data cleaning. It's built for 
 detecting erroneous tuples in the dataset based on given set of conditional functional dependencies (CFDs) and building a classification model to predict erroneous tuples such that the "cleaned" dataset satisfies the CFDs, and semantically correct. 
