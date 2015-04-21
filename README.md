@@ -30,10 +30,10 @@ name must be San Francisco (resp. Jackson).
 
 ...  | HospName | Addr | City | State | Zip | ...
 ---  | -------- | ---- |----- | ------| ----| ---
-Jackson Medical Ctr  | 220 Hospital Drive | Jackson | AL | 36545
-Jackson Medical Ctr  | 220 Hospital Drive | ***Jakson*** | AL | ***36545***
-SanFran Hospital | 1001 Potrero Ave | San Francisco | CA | 94110
-Cali Pacific Medical Ctr | 3555 Cesar St | ***San Fran*** | CA | ***94110*** 
+ ... | Jackson Medical Ctr  | 220 Hospital Drive | Jackson | AL | 36545
+...  | Jackson Medical Ctr  | 220 Hospital Drive | ***Jakson*** | AL | ***36545***
+... | SanFran Hospital | 1001 Potrero Ave | San Francisco | CA | 94110
+... |Cali Pacific Medical Ctr | 3555 Cesar St | ***San Fran*** | CA | ***94110*** 
 
 Consider tuple 2 and 4. Tuple 2 (resp. 4) satisfies the premise of CFD1
 (resp. CFD2) but they disagree in the right hand side (RHS) values (the city is
