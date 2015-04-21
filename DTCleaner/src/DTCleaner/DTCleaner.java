@@ -1,25 +1,8 @@
 package DTCleaner;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.AbstractMap.SimpleImmutableEntry;
-import java.util.Set;
-import java.util.TreeSet;
 
 import com.google.common.collect.Multiset;
 
@@ -362,7 +345,7 @@ public class DTCleaner{
 		
 		for(int folder = 1; folder <= CFDsMergedSize; folder++){
 			
-			// The number of target attributes for this model
+			// numOfTargets holds the number of target attributes for this model
 			int numOfTargets = -1;
 			// open predictions file
 			FileInputStream fs = new FileInputStream("exp/"+folder+"/setting.s");
@@ -382,7 +365,7 @@ public class DTCleaner{
 			
 			if(numOfTargets < 0 || targetAttr == null){
 				System.out.println("\nError: Coudln't complete method replaceByPredictions()");
-				return;
+				System.exit(1);
 			}
 			
 		
@@ -417,16 +400,12 @@ public class DTCleaner{
 				bw.write(testLine+"\n");
 			}
 			
-			while(testLine != null){
-				//System.out.println(predictedLine);
-				//System.out.println(predictedLine.substring(0,Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
-			
+			while(testLine != null){			
 				
 				System.out.println("replacing: " + predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)));
 				System.out.println("To       : " + predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)) );
 				System.out.println("In       : " + testLine+ "\n------------------");
 				
-				String [] orginalValues = predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)).split(",");
 				String [] predictedValues = predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)).split(",");
 				String [] testLineValues = testLine.split(",");
 				
@@ -446,11 +425,6 @@ public class DTCleaner{
 				
 				testLine = replacedTestLine.toString();
 
-				//System.out.println(testLine);
-				//System.out.println(predictedLine);
-				//System.out.println(predictedLine.substring(0, Util.nthOccurrence(predictedLine, ',', numOfTargets)));
-				//System.out.println(predictedLine.substring(Util.nthOccurrence(predictedLine, ',', numOfTargets)+1, Util.nthOccurrence(predictedLine, ',', numOfTargets*2)));
-				
 				bw.write(testLine+"\n");
 				
 				predictedLine = br0.readLine();
@@ -505,14 +479,10 @@ public class DTCleaner{
 		
 		DTCleaner cleaner = new DTCleaner(args[0],args[1]);
 		cleaner.seperateViolatedInstances();
-		//cleaner.printInstances();
-		//cleaner.printViolatingInstances();
-		//cleaner.printCFDViolatingTuplesMap();
 		cleaner.makeModel();
 
 		cleaner.replaceByPredictions();
 		
-		//System.out.println(cleaner.getViolatedInstancs());
 	}
 
 }
