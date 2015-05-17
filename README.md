@@ -56,6 +56,8 @@ that we would use for training our model, and set of violating tuples that we wi
 
 ![alt text][System]
 
+It's worth noting that DTCleaner focuses more on what happens after you acquire a set of valid and consistency set of CFDs by the user (this could be from experts with enough knowledge on the bussiness logic, or using a CFD discovery algrothim), and how to repair violating tuples so that we are closer to a dataset that is consistent with our CFDs. The repairing part (determining what attribute to change and what's the new value) is done with machine learning.
+
 ## Installation
 
 Make sure the following libraries are in your build path.
