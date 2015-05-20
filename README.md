@@ -80,6 +80,15 @@ Eample: DTCleaner data/hospitalFewerAttr20PercentNoiseOn4.arff.arff data/CFDs
 4. Push to the branch: `git push origin my-new-feature`
 5. Submit a pull request :D
 
+## Bibtex
+```
+@misc{mustafa2015dtcleaner,
+  title  = {DTCleaner for data quality},
+  author = {Abualsaud, Mustafa}, 
+  url    = {https://github.com/AmmsA/DTCleaner},
+  year   = {2015}
+}
+```
 
 ## License
 
