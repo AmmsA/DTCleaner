@@ -1,4 +1,4 @@
-# ![alt text][Logo]
+DTCleaner
 #### Motivation
 It has been recognized that poor data quality can have multiple negative impact to
 enterprises [1]. Businesses operating on dirty data are in risk of causing large amount of
@@ -54,7 +54,6 @@ The system would first perform the CFD violating detection, and separates the CF
 and inserts them in our test set. We then end up with a clean (non-CFD-violating tuples) set 
 that we would use for training our model, and set of violating tuples that we will use for making predictions.
 
-![alt text][System]
 
 It's worth noting that DTCleaner focuses more on what happens after you acquire a set of valid and consistency set of CFDs by the user (this could be from experts with enough knowledge on the bussiness logic, or using a CFD discovery algrothim), and how to repair violating tuples so that we are closer to a dataset that is consistent with our CFDs. The repairing part (determining what attribute to change and what's the new value) is done with machine learning.
 
@@ -114,5 +113,3 @@ SOFTWARE.
 [1] Thomas C. Redman. The impact of poor data quality on the typical enterprise.
 Commun. ACM, 41(2):79{82, February 1998.
 
-[System]: http://www.mustafa-s.com/DTCleaner/sys.png
-[Logo]: http://www.mustafa-s.com/DTCleaner/logo.png
